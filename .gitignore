@@ -1,0 +1,9 @@
+node_modules/
+catalog-server/data/*.db
+catalog-server/data/*.db-*
+catalog-server/storage/packages/*
+!catalog-server/storage/packages/.gitkeep
+client-mac/.build/
+client-mac/build/
+client-mac/.swiftpm/
+.DS_Store

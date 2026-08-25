@@ -1,0 +1,31 @@
+<%- include('_layout_top') %>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:15px;">Upload a new package</h3>
+  <p style="font-size:12px;color:#6b7280;">This is the "IT vets an app once" step from the plan — the file uploaded here is the only copy every employee will ever install. It lands as <strong>Pending</strong> until explicitly approved.</p>
+  <form class="upload" method="post" action="/admin/packages" enctype="multipart/form-data">
+    <label>App name</label>
+    <input type="text" name="name" placeholder="Docker Desktop" required>
+
+    <label>Version</label>
+    <input type="text" name="version" placeholder="4.34.0" required>
+
+    <label>Category</label>
+    <input type="text" name="category" placeholder="Developer Tools">
+
+    <label>Icon (emoji)</label>
+    <input type="text" name="icon" placeholder="🐳">
+
+    <label>Description</label>
+    <textarea name="description" rows="2" placeholder="What it's for, in one line"></textarea>
+
+    <label>Installer file (.pkg / .dmg)</label>
+    <input type="file" name="file" required>
+
+    <div style="margin-top:16px;">
+      <button class="btn primary" type="submit">Upload</button>
+    </div>
+  </form>
+</div>
+
+<%- include('_layout_bottom') %>
