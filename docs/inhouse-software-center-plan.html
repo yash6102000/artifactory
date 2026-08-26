@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-House Software Center — Custom Catalog + Santa</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#f5f6f8;color:#1a1a2e;padding:24px 16px}
+  .pg{max-width:1140px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin-bottom:2px}
+  .sub{font-size:11px;color:#6b7280;margin-bottom:18px}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:#e5e7eb;border-radius:10px;padding:3px;flex-wrap:wrap;width:fit-content}
+  .tab{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:0;color:#6b7280;transition:all .15s}
+  .tab.on{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .tab:hover{color:#1a1a2e}
+  .pn{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+  .hid{display:none}
+  .st{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:12px}
+  .ly{border:2px dashed;border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative}
+  .lt{position:absolute;top:-9px;left:16px;background:#fff;padding:0 8px;font-size:9.5px;font-weight:700;letter-spacing:.7px}
+  .rw{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center}
+  .nd{border-radius:9px;padding:10px 13px;text-align:center;min-width:90px;border:2px solid;background:#fff;position:relative}
+  .ns{padding:7px 10px;min-width:75px}
+  .ni{font-size:17px;margin-bottom:2px}
+  .nt{font-size:10px;font-weight:700;line-height:1.3}
+  .nx{font-size:8px;opacity:.6;margin-top:1px}
+  .nb{position:absolute;top:-7px;right:-7px;font-size:7px;font-weight:800;padding:1px 5px;border-radius:4px}
+  .ar{font-size:15px;color:#d1d5db;flex-shrink:0}
+  .db{background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:11px 13px;margin-top:8px}
+  .dt{font-size:10.5px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .dl{list-style:none;padding:0}
+  .dl li{font-size:10.5px;color:#475569;padding:2px 0 2px 13px;position:relative;line-height:1.5}
+  .dl li::before{content:"\2192";position:absolute;left:0;color:#94a3b8;font-size:9px}
+  .co{padding:12px 14px;border-radius:9px;border:1px solid}
+  .ct{font-weight:700;font-size:11.5px;margin-bottom:3px}
+  .cx{font-size:11px;line-height:1.6}
+  .sp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .s3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .s4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .cd{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px;border-top:3px solid}
+  code{background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:10px;font-family:monospace}
+  .mono{font-family:monospace;font-size:10px;color:#475569;line-height:1.75;padding:10px 14px;background:#fafafa;border-radius:6px;overflow-x:auto}
+  .lg{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;flex-wrap:wrap}
+  .li{display:flex;align-items:center;gap:4px;font-size:9px;color:#6b7280;font-weight:600}
+  .ld{width:9px;height:9px;border-radius:3px}
+  .why{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .why-t{font-size:10px;font-weight:700;color:#92400e}
+  .why-d{font-size:10px;color:#78350f;margin-top:2px}
+  .ok{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .ok-t{font-size:10px;font-weight:700;color:#065f46}
+  .ok-d{font-size:10px;color:#064e3b;margin-top:2px}
+  table.cmp{width:100%;border-collapse:collapse;margin-top:8px}
+  table.cmp th{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb}
+  table.cmp td{font-size:10.5px;color:#334155;padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  table.cmp tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="pg">
+  <h1>🛒 In-House Software Center — Custom Catalog + Santa Enforcement</h1>
+  <p class="sub">Our own catalog + client app, built in-house &bull; Santa (free, OSS, already Apple-approved) handles enforcement &bull; No paid MDM, no vendor free tier &bull; <strong>The Software Center is the ONLY way to get software — nothing else installs or runs</strong> &bull; Mac first</p>
+
+  <div class="tabs" id="tabbar">
+    <button class="tab on" onclick="go(0)">Core Idea</button>
+    <button class="tab" onclick="go(1)">The Solution</button>
+    <button class="tab" onclick="go(2)">Tech Stack (Pilot)</button>
+    <button class="tab" onclick="go(3)">Build Plan</button>
+    <button class="tab" onclick="go(4)">Costs</button>
+  </div>
+
+  <!-- ===== TAB 0: CORE IDEA ===== -->
+  <div id="t0" class="pn">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">THE CORE IDEA — OUR OWN CATALOG, PROVEN ENFORCEMENT</span></div>
+
+    <div class="why" style="margin-bottom:10px">
+      <div class="why-t">⚠️ Why we're doing this now</div>
+      <div class="why-d">An employee downloaded and tried to crack a paid app on their company Mac. No admin restrictions exist today, so nothing stopped it — the vendor's anti-piracy check flagged it and a legal notice landed. macOS Gatekeeper only warns, it doesn't block; the first time IT learned what was installed was from an outside party, not internally. At 60 people and growing, that gap is bigger than one incident.</div>
+    </div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#6ee7b7;margin-bottom:10px">
+      <div class="ct" style="color:#065f46">🎯 The goal, stated plainly</div>
+      <div class="cx" style="color:#064e3b">Every Mac gets software from our own catalog app — full stop. <strong>If it isn't in the catalog, it doesn't run.</strong> Not a policy people are asked to follow — enforced by the machine itself refusing to execute anything that wasn't packaged and signed off through our catalog.</div>
+    </div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">Two pieces: one we build, one we reuse deliberately</div>
+      <div class="cx" style="color:#1e3a5f">The <strong>catalog + client app is ours</strong> — our branding, our approval flow, our UI, built in-house. The <strong>enforcement is Santa</strong> — free, open-source, and already approved by Apple for the exact capability we need (blocking unapproved execution). Writing our own enforcement engine would mean applying to Apple ourselves for a restricted entitlement with no guaranteed outcome, then maintaining kernel-adjacent code forever. Santa already cleared that bar years ago, at other companies' expense, not ours.</div>
+    </div>
+
+    <div class="ly" style="border-color:#2563eb">
+      <span class="lt" style="color:#2563eb">HOW A REQUEST ACTUALLY MOVES</span>
+      <div class="rw">
+        <div class="nd" style="border-color:#334155">
+          <div class="ni">👩‍💻</div><div class="nt">Employee wants<br>an app</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#f59e0b;background:#fffbeb">
+          <div class="ni">🛒</div><div class="nt">Our Catalog App</div><div class="nx">custom-built client</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#22c55e;background:#f0fdf4">
+          <div class="ni">✅</div><div class="nt">In catalog?<br>Install &amp; run instantly</div>
+        </div>
+      </div>
+      <div class="rw" style="margin-top:8px">
+        <div class="nd" style="border-color:#334155">
+          <div class="ni">👩‍💻</div><div class="nt">Employee downloads<br>from outside anyway</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#dc2626;background:#fef2f2;border-width:3px">
+          <div class="nb" style="background:#dc2626;color:#fff">BLOCKED</div>
+          <div class="ni">🚫</div><div class="nt">Santa refuses<br>to run it</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#7c3aed;background:#f5f3ff">
+          <div class="ni">🎫</div><div class="nt">Dialog links back<br>to our Catalog App</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s3" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">🚀 Fixes the actual incident</div>
+        <ul class="dl">
+          <li>Cracked installers/keygens are never in our catalog, so they never run</li>
+          <li>No blocklist to maintain — anything not explicitly approved is denied by default</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#2563eb">
+        <div class="dt" style="color:#2563eb">🔄 Kills the "which source do I trust" question</div>
+        <ul class="dl">
+          <li>Docker's official site, Homebrew, a curl script — irrelevant once there's one source</li>
+          <li>IT packages it into our catalog once; that's the only copy anyone can run</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">📈 Ours where it matters, proven where it's risky</div>
+        <ul class="dl">
+          <li>Custom catalog app = our brand, our workflow, full control over the experience</li>
+          <li>Santa for enforcement = no Apple approval gamble, no kernel-adjacent code to maintain ourselves</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 1: THE SOLUTION ===== -->
+  <div id="t1" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">THE SOLUTION — WHAT WE BUILD, WHAT WE REUSE</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">Four components we build, one proven tool we reuse for the highest-risk piece</div>
+      <div class="cx" style="color:#064e3b">Everything employee-facing and everything IT-facing is ours. The one piece that runs on every process launch on every machine, with zero tolerance for bugs, is Santa — not because we can't write code, but because reusing years of production hardening there is the responsible call.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Component</th><th>What it does</th><th>Built by</th></tr>
+      <tr><td><strong>Catalog backend</strong></td><td>Stores approved installers + metadata (name, version, icon, category), serves the catalog to clients via an API</td><td>Us</td></tr>
+      <tr><td><strong>Admin console</strong></td><td>Web UI for IT to upload a new package, approve a version, view install stats, review audit logs and exception requests</td><td>Us</td></tr>
+      <tr><td><strong>macOS client app</strong></td><td>The employee-facing catalog UI — browse, click Install, see progress and updates</td><td>Us (native Swift/SwiftUI)</td></tr>
+      <tr><td><strong>Privileged install helper</strong></td><td>Installs need admin rights — a signed helper does the install safely without handing the whole app root access</td><td>Us</td></tr>
+      <tr><td><strong>Enforcement engine</strong></td><td>Blocks any app from running unless it matches something our catalog approved — the actual "outside not allowed" gate</td><td><strong>Santa</strong> (free, OSS)</td></tr>
+    </table>
+
+    <div class="ok">
+      <div class="ok-t">✅ Why Santa specifically, and why it's safe to run on every machine</div>
+      <div class="ok-d">Built on Apple's modern Endpoint Security Framework, not the deprecated kernel-extension approach. Already carries Apple's approval for the exact restricted capability we need — no entitlement application, no waiting on Apple, no risk of denial. Open source and auditable — we can read every line before it ships. Nothing it logs leaves our infrastructure; rules and events sync to a server we run. Originally built and proven internally at Google's own scale before going public, and in production at many companies since. Fail-open/fail-closed behavior is configurable, so a Santa bug doesn't have to mean bricked laptops.</div>
+    </div>
+
+    <table class="cmp" style="margin-top:14px">
+      <tr><th>What it enforces</th><th>Protects against</th><th>How</th></tr>
+      <tr><td><strong>Default-deny execution</strong></td><td>Anything not packaged through our catalog running at all — the exact incident category</td><td>Santa (Lockdown mode)</td></tr>
+      <tr><td><strong>Certificate / hash allowlisting</strong></td><td>Every catalog app runs instantly, no per-launch prompt</td><td>Santa rules, pushed whenever IT approves something in our admin console</td></tr>
+      <tr><td><strong>Compiler &amp; package rules</strong></td><td>False-positive blocks on legitimate local builds and Homebrew CLI tools developers rely on</td><td>Santa transitive allowlisting + a scheduled hash-rule job</td></tr>
+      <tr><td><strong>Exception workflow</strong></td><td>A legitimate new tool getting silently and permanently blocked</td><td>Santa block dialog → IT review in our admin console → catalog + rule added together, same day</td></tr>
+      <tr><td><strong>Audit log — who/what/when</strong></td><td>No record to investigate if something does slip through</td><td>Our catalog logs + Santa's logs, combined</td></tr>
+    </table>
+
+    <div class="db" style="margin-top:12px">
+      <div class="dt" style="color:#475569">The one config that ties our catalog and Santa together</div>
+      <div class="mono" style="font-size:9.5px">
+&lt;key&gt;ClientMode&lt;/key&gt;&lt;integer&gt;2&lt;/integer&gt; &nbsp;<span style="color:#6b7280">// Lockdown</span><br>
+&lt;key&gt;BannedBlockMessage&lt;/key&gt;&lt;string&gt;<span style="color:#059669">Not approved. Get it from our Software Center.</span>&lt;/string&gt;<br>
+&lt;key&gt;EventDetailURL&lt;/key&gt;&lt;string&gt;<span style="color:#059669">https://software.internal.company.com</span>&lt;/string&gt;
+      </div>
+      <div style="font-size:9px;color:#6b7280;margin-top:4px">Santa's block dialog points straight at our own catalog app — the two feel like one product to the employee, even though only one of them is code we wrote.</div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ The trade-off, stated honestly</div>
+      <div class="why-d">Going straight to default-deny means anything not yet in the catalog breaks the first time someone tries it — including everyday dev tooling. That's why the build plan includes a short Monitor-mode burn-in and compiler/package rules before flipping enforcement on, and why the exception workflow is a same-day fix, not a queue.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: TECH STACK (BUILT FOR ~100, TESTED ON 5-10 FIRST) ===== -->
+  <div id="t2" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#f5f3ff;color:#7c3aed">TECH STACK — BUILT FOR ~100 MACHINES, PROVEN ON 5-10 FIRST</span></div>
+
+    <div class="co" style="background:#f5f3ff;border-color:#c4b5fd;margin-bottom:14px">
+      <div class="ct" style="color:#5b21b6">Same architecture at 5 machines and at 100 — only the test cohort is small, not the design</div>
+      <div class="cx" style="color:#4c1d95">Every choice below already holds at ~100 Macs without a rewrite. The pilot only limits how many real machines we point it at first, so we can catch mistakes cheaply before trusting it company-wide.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Layer</th><th>Use this</th><th>Why it holds at ~100 machines</th></tr>
+      <tr><td><strong>Catalog backend API</strong></td><td>Node.js + Fastify, <em>or</em> Python + FastAPI</td><td>Either comfortably handles a few hundred periodic check-ins/installs a day on one small VM — no framework limit here at all</td></tr>
+      <tr><td><strong>Database</strong></td><td>PostgreSQL from day one</td><td>SQLite's single-writer lock gets uncomfortable once 100 clients are checking in and reporting install status concurrently. Postgres costs almost nothing extra to run on the same VM and removes that ceiling entirely — no migration later</td></tr>
+      <tr><td><strong>Package storage</strong></td><td>Plain folder on the server's disk</td><td>Fine well past 100 machines — package count/size drives this, not device count. Revisit only if the catalog itself grows into hundreds of large apps</td></tr>
+      <tr><td><strong>Admin console</strong></td><td>Server-rendered pages (templates) or a minimal React page</td><td>Still an internal tool for a small IT team even at 100 devices — device list, approvals, and logs render fine without a heavier frontend</td></tr>
+      <tr><td><strong>macOS client app</strong></td><td>Swift + SwiftUI, built in Xcode</td><td>The only realistic choice for a native app that hosts a privileged helper and self-updates — same app runs unmodified at 5 or 100 machines</td></tr>
+      <tr><td><strong>Privileged install helper</strong></td><td>Swift, using <code>SMJobBless</code>/<code>SMAppService</code> + XPC</td><td>Apple's standard pattern for "app needs admin rights for one narrow task" — avoids running the whole app as root</td></tr>
+      <tr><td><strong>Client self-update</strong></td><td>Client polls a <code>/version</code> endpoint on check-in; if newer, downloads and installs itself via the same privileged helper</td><td>Needed once we're past a handful of machines — updating 100 Macs by hand isn't realistic, and building this from day one means the pilot already proves it works</td></tr>
+      <tr><td><strong>Server + reverse proxy</strong></td><td>One small-to-medium VM (or EC2 <code>t3.small</code>/<code>t3.medium</code>), nginx in front</td><td>Comfortably serves the API, admin console, and package files for ~100 devices; resize the instance later if needed, no architecture change</td></tr>
+      <tr><td><strong>TLS</strong></td><td>Free cert via Let's Encrypt (certbot) or an ALB + ACM if on AWS</td><td>$0, auto-renewing, no reason to pay for a cert at any of these scales</td></tr>
+    </table>
+
+    <div class="ly" style="border-color:#059669;margin-top:12px">
+      <span class="lt" style="color:#059669">DISTRIBUTING THE CLIENT APP — SAME MECHANISM AT 5 OR 100 MACHINES</span>
+      <div class="cx" style="margin-bottom:8px">The first-install problem (getting the app onto a Mac that has nothing yet) is identical at any device count — it's a bootstrap script, run once per machine, either by hand or through whatever enrolls new laptops. What changes with scale is <em>how many times</em> we run it, not what it is.</div>
+      <table class="cmp">
+        <tr><th>Step</th><th>How</th></tr>
+        <tr><td>Sign &amp; notarize the client app</td><td>Build a signed <code>.pkg</code> with our Apple Developer ID, run <code>notarytool</code> so Gatekeeper doesn't warn on first launch — the ordinary, fast, automated notarization process (not the restricted entitlement from the enforcement discussion)</td></tr>
+        <tr><td>Host the installer</td><td>Drop the signed <code>.pkg</code> on the same server, behind the same TLS-protected URL as the catalog</td></tr>
+        <tr><td><strong>Pilot (5-10 Macs):</strong> get it onto each machine</td><td>Slack link + one-line instruction, or IT installs directly via Screen Sharing/Apple Remote Desktop — fine by hand at this count</td></tr>
+        <tr><td><strong>Later (~100 Macs):</strong> same install, at scale</td><td>The identical signed <code>.pkg</code>, run through whatever onboards a new laptop (a setup script during device provisioning, or pushed as one task via Santa's existing Configuration-Profile delivery once that's live) — no new install mechanism to design</td></tr>
+        <tr><td>Confirm it's working</td><td>Each Mac shows up in the admin console's device list after first launch, at either scale</td></tr>
+      </table>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ What the pilot is actually for, given the stack is already sized for ~100</div>
+      <div class="why-d">Since the architecture doesn't change between 5 and 100 machines, the pilot's job isn't "prove the stack scales" — it's catching real bugs (a bad package, a wrong Santa rule, a broken install flow) on a small blast radius before every laptop in the company depends on it.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: BUILD PLAN ===== -->
+  <div id="t3" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">BUILD PLAN — PHASED ROLLOUT, TASK BY TASK</span></div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">Three phases, no external approval gate — dropping the custom enforcement engine removes the Apple entitlement wait entirely.</div>
+      <div class="cx" style="color:#1e3a5f">Infra assumption: one small self-hosted server (or a single small EC2 instance if hosted on AWS) for our catalog backend + Santa's rule server.</div>
+    </div>
+
+    <div class="ly" style="border-color:#059669;margin-bottom:10px">
+      <span class="lt" style="color:#059669;font-size:11px">PHASE 1 — Catalog + Client App Live (4-6 Weeks)</span>
+      <div style="padding:6px 10px;background:#ecfdf5;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#065f46">Goal: employees install real approved apps through our own app, no enforcement yet.</div>
+      </div>
+      <table class="cmp">
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+        <tr><td>Stand up the server</td><td>One small VM (or EC2 <code>t3.small</code>), reverse proxy + free TLS cert in front</td><td><code>https://software.internal.company.com</code> resolves with a valid cert</td></tr>
+        <tr><td>Build the catalog backend + admin console</td><td>DB, object storage, upload/approve flow for IT</td><td>IT can upload a package and see it appear in the catalog API</td></tr>
+        <tr><td>Build the client app</td><td>SwiftUI app listing catalog apps, with an install button</td><td>Pilot Macs can browse and see the top 10 requested tools</td></tr>
+        <tr><td>Build the privileged install helper</td><td>Signed helper process handles the actual install, verified against package checksum</td><td>Docker, Slack, Zoom etc. install correctly via the client app</td></tr>
+        <tr><td>Bootstrap distribution</td><td>One-time manual install of the client app on pilot Macs</td><td>8-10 pilot Macs have the client app installed and working</td></tr>
+      </table>
+    </div>
+
+    <div class="ly" style="border-color:#2563eb;margin-bottom:10px">
+      <span class="lt" style="color:#2563eb;font-size:11px">PHASE 2 — Santa Enforcement, Pilot (2-4 Weeks)</span>
+      <div style="padding:6px 10px;background:#dbeafe;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#1e40af">Goal: on the pilot group, nothing installs or runs unless our catalog approved it.</div>
+      </div>
+      <table class="cmp">
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+        <tr><td>Deploy Santa (Monitor mode)</td><td>Install on pilot Macs via a Configuration Profile, <code>ClientMode = 1</code>, for a few days</td><td>Pilot Macs show exec events in the log, zero unexplained blocks</td></tr>
+        <tr><td>Wire admin-console approvals to Santa rules</td><td>Each catalog approval in our admin console pushes a matching Santa certificate/hash rule</td><td>A new catalog approval reaches pilot Macs' Santa rule set within minutes</td></tr>
+        <tr><td>Enable compiler rules</td><td><code>EnableTransitiveRules = true</code>; add <code>ALLOWLIST_COMPILER</code> rules for Xcode's linker, Go, and Homebrew's own binary</td><td>A local <code>go build</code> and a source-built brew formula both run without a block</td></tr>
+        <tr><td>Flip pilot to Lockdown</td><td><code>ClientMode = 2</code> pushed to the pilot group; block dialog points to our catalog app</td><td>A real unsigned test binary is blocked with the correct dialog, catalog apps still run fine</td></tr>
+      </table>
+    </div>
+
+    <div class="ly" style="border-color:#7c3aed;margin-bottom:10px">
+      <span class="lt" style="color:#7c3aed;font-size:11px">PHASE 3 — Org-Wide Rollout (2-3 Weeks)</span>
+      <div style="padding:6px 10px;background:#f5f3ff;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#5b21b6">Goal: the same enforcement the pilot already has, on every Mac in the company.</div>
+      </div>
+      <table class="cmp">
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+        <tr><td>Stand up the exception path</td><td>A dedicated Slack channel + documented review step (check the real signing cert, not just the request text), resolved through our admin console</td><td>One real request handled end-to-end same day, rule + catalog entry added together</td></tr>
+        <tr><td>Roll to the next team</td><td>Same client app + Santa bootstrap — Engineering, then everyone else, one team at a time</td><td>Every company Mac reports Lockdown mode active</td></tr>
+        <tr><td>Announce company-wide</td><td>Short internal doc/Slack post: "install things here from now on, here's why"</td><td>Real installs happen via our catalog org-wide, unprompted</td></tr>
+      </table>
+      <div class="why" style="margin-top:8px">
+        <div class="why-t">⚠️ Rollback plan if something breaks</div>
+        <div class="why-d"><code>santactl</code> can flip any single Mac back to Monitor mode immediately. Every rollback gets logged as its own incident — a pattern of rollbacks means the rule set isn't ready, not that Lockdown is wrong.</div>
+      </div>
+    </div>
+
+    <div class="db">
+      <div class="dt" style="color:#2563eb">Timeline</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <div style="background:#ecfdf5;border:2px solid #059669;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#059669;text-align:center">P1: Catalog Live<br><span style="font-weight:500;font-size:9px">4-6 weeks</span></div>
+        <span style="color:#9ca3af;font-size:14px">&rarr;</span>
+        <div style="background:#dbeafe;border:2px solid #2563eb;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#2563eb;text-align:center">P2: Pilot Enforcement<br><span style="font-weight:500;font-size:9px">2-4 weeks</span></div>
+        <span style="color:#9ca3af;font-size:14px">&rarr;</span>
+        <div style="background:#f5f3ff;border:2px solid #7c3aed;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#7c3aed;text-align:center">P3: Org-Wide<br><span style="font-weight:500;font-size:9px">2-3 weeks</span></div>
+      </div>
+      <div style="font-size:10px;color:#6b7280;margin-top:8px;line-height:1.6">
+        <strong>Total to org-wide enforcement: ~8-13 weeks (2-3 months).</strong> Total to a working catalog demo: <strong>~4-6 weeks.</strong> No external approval dependency anywhere in this timeline.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: COSTS ===== -->
+  <div id="t4" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fffbeb;color:#92400e">COSTS — KNOWN VS UNKNOWN</span></div>
+
+    <div class="co" style="background:#fffbeb;border-color:#fde68a;margin-bottom:14px">
+      <div class="ct" style="color:#92400e">Building the catalog ourselves costs engineering time; reusing Santa for enforcement keeps the riskiest line item off this list</div>
+      <div class="cx" style="color:#78350f">The predictable, budget-able items, and separately, the costs that are real but genuinely hard to size until this is actually running.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Item</th><th>Estimate</th><th>Type</th></tr>
+      <tr><td><strong>Server hosting</strong> (catalog backend + Santa rule server)</td><td>~$20-30/mo</td><td>Known</td></tr>
+      <tr><td><strong>Domain, TLS, Apple Developer account</strong></td><td>~$100-115/yr combined</td><td>Known</td></tr>
+      <tr><td><strong>Catalog + client app build</strong> (Phase 1)</td><td>~4-6 weeks, 1-2 engineers</td><td>Known (time)</td></tr>
+      <tr><td><strong>Santa integration + rollout</strong> (Phases 2-3)</td><td>~4-7 weeks, 1 engineer</td><td>Known (time)</td></tr>
+      <tr><td><strong>Ongoing patch/maintenance of our own code</strong></td><td>A few hrs/month, grows with device count — Santa's own maintenance is not our burden</td><td>Unknown</td></tr>
+      <tr><td><strong>Help-desk spike at Lockdown cutover</strong></td><td>Unsized until it happens</td><td>Unknown</td></tr>
+      <tr><td><strong>Standing rule-curation load</strong></td><td>Ongoing, no fixed hours — someone owns new-tool requests</td><td>Unknown</td></tr>
+    </table>
+
+    <div class="sp" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#2563eb">
+        <div class="dt" style="color:#2563eb">💰 Known — budget today</div>
+        <ul class="dl">
+          <li>1 small self-hosted VM, domain, TLS, Apple Developer account</li>
+          <li>~8-13 weeks of engineer time to build and roll out end to end</li>
+          <li>$0 licensing on the enforcement side — Santa is free, OSS, forever</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">❓ Unknown — real, not sizeable yet</div>
+        <ul class="dl">
+          <li>Ongoing patching of our own catalog backend + client app, indefinitely</li>
+          <li>Support spike the week Lockdown mode turns on</li>
+          <li>Rule-curation becomes a standing job, not one-time</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">📊 For context — the cost this replaces, and the cost this avoids</div>
+      <div class="why-d">A paid MDM (Jamf/Kandji/Mosyle beyond its free cap) runs ~$8-12/device/month — ~$500-720/month at 60 devices. A fully custom enforcement engine (writing our own instead of using Santa) would have added an Apple approval dependency with no guaranteed timeline, plus a specialized security-engineering hire and indefinite per-macOS-version maintenance — this plan avoids all of that by reusing Santa for the one piece where reinventing it buys nothing but risk.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(n){for(var i=0;i<5;i++){document.getElementById('t'+i).classList.add('hid');document.querySelectorAll('.tab')[i].classList.remove('on')}document.getElementById('t'+n).classList.remove('hid');document.querySelectorAll('.tab')[n].classList.add('on')}
+</script>
+</body>
+</html>

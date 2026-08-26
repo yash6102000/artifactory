@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Rollout Plan — AWS-Hosted, All Phases End to End</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#f5f6f8;color:#1a1a2e;padding:24px 16px}
+  .pg{max-width:1140px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin-bottom:2px}
+  .sub{font-size:11px;color:#6b7280;margin-bottom:18px}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:#e5e7eb;border-radius:10px;padding:3px;flex-wrap:wrap;width:fit-content}
+  .tab{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:0;color:#6b7280;transition:all .15s}
+  .tab.on{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .tab:hover{color:#1a1a2e}
+  .pn{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+  .hid{display:none}
+  .st{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:12px}
+  .ly{border:2px dashed;border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative}
+  .lt{position:absolute;top:-9px;left:16px;background:#fff;padding:0 8px;font-size:9.5px;font-weight:700;letter-spacing:.7px}
+  .rw{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center}
+  .nd{border-radius:9px;padding:10px 13px;text-align:center;min-width:90px;border:2px solid;background:#fff;position:relative}
+  .ns{padding:7px 10px;min-width:75px}
+  .ni{font-size:17px;margin-bottom:2px}
+  .nt{font-size:10px;font-weight:700;line-height:1.3}
+  .nx{font-size:8px;opacity:.6;margin-top:1px}
+  .nb{position:absolute;top:-7px;right:-7px;font-size:7px;font-weight:800;padding:1px 5px;border-radius:4px}
+  .ar{font-size:15px;color:#d1d5db;flex-shrink:0}
+  .db{background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:11px 13px;margin-top:8px}
+  .dt{font-size:10.5px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .dl{list-style:none;padding:0}
+  .dl li{font-size:10.5px;color:#475569;padding:2px 0 2px 13px;position:relative;line-height:1.5}
+  .dl li::before{content:"\2192";position:absolute;left:0;color:#94a3b8;font-size:9px}
+  .co{padding:12px 14px;border-radius:9px;border:1px solid}
+  .ct{font-weight:700;font-size:11.5px;margin-bottom:3px}
+  .cx{font-size:11px;line-height:1.6}
+  .sp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .s3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .s4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .cd{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px;border-top:3px solid}
+  code{background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:10px;font-family:monospace}
+  .mono{font-family:monospace;font-size:10px;color:#475569;line-height:1.75;padding:10px 14px;background:#fafafa;border-radius:6px;overflow-x:auto}
+  .lg{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;flex-wrap:wrap}
+  .li{display:flex;align-items:center;gap:4px;font-size:9px;color:#6b7280;font-weight:600}
+  .ld{width:9px;height:9px;border-radius:3px}
+  .why{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .why-t{font-size:10px;font-weight:700;color:#92400e}
+  .why-d{font-size:10px;color:#78350f;margin-top:2px}
+  table.cmp{width:100%;border-collapse:collapse;margin-top:8px}
+  table.cmp th{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb}
+  table.cmp td{font-size:10.5px;color:#334155;padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  table.cmp tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="pg">
+  <h1>🚀 Full Rollout Plan — AWS-Hosted, All Phases End to End</h1>
+  <p class="sub">Companion to the architecture plan &bull; Every phase fully specified, not deferred &bull; All infrastructure hosted on AWS &bull; Includes ownership, policy/legal, and cost detail the pitch deck summarized</p>
+
+  <div class="tabs" id="tabbar">
+    <button class="tab on" onclick="go(0)">AWS Architecture</button>
+    <button class="tab" onclick="go(1)">Phase 1</button>
+    <button class="tab" onclick="go(2)">Phase 2</button>
+    <button class="tab" onclick="go(3)">Phase 3</button>
+    <button class="tab" onclick="go(4)">Phase 4</button>
+    <button class="tab" onclick="go(5)">Ownership</button>
+    <button class="tab" onclick="go(6)">Policy &amp; Legal</button>
+    <button class="tab" onclick="go(7)">AWS Costs</button>
+  </div>
+
+  <!-- ===== TAB 0: AWS ARCHITECTURE ===== -->
+  <div id="t0" class="pn">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fff3e0;color:#c2410c">AWS ARCHITECTURE — WHERE EVERY PIECE ACTUALLY RUNS</span></div>
+
+    <div class="co" style="background:#fff7ed;border-color:#fed7aa;margin-bottom:14px">
+      <div class="ct" style="color:#9a3412">One VPC, one small EC2 instance for Phases 1-3, AWS-managed services added only where they remove real maintenance work</div>
+      <div class="cx" style="color:#7c2d12">The tools themselves (Munki, Santa, Pi-hole) don't care what cloud they're on — this tab is the AWS-specific decision for each: what service hosts it, how it's reached securely, and where we deliberately use an AWS-managed service instead of running one more thing ourselves.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Component</th><th>AWS service</th><th>Why this, not something else</th></tr>
+      <tr><td><strong>Compute (Munki, Santa, Pi-hole)</strong></td><td>1x EC2 <code>t3.small</code> (2 vCPU/2GB) in Phase 1-2; resize to <code>t3.medium</code> if Pi-hole+Munki traffic grows</td><td>Cheapest way to run 3 lightweight Linux services; no need for containers/ECS at this scale</td></tr>
+      <tr><td><strong>Storage</strong></td><td>40GB <code>gp3</code> EBS volume, daily AWS Backup snapshot</td><td>Munki's repo is just files — EBS is simplest; S3 becomes worth it only once the repo is large enough to want CDN-style serving (Phase 4+)</td></tr>
+      <tr><td><strong>Networking</strong></td><td>Dedicated VPC, public subnet, Security Group scoped to office IP range + VPN CIDR</td><td>Pi-hole needs port 53 reachable by every laptop; scoping the Security Group (not the whole internet) keeps the DNS resolver from being an open relay</td></tr>
+      <tr><td><strong>TLS for Munki repo / Fleet UI</strong></td><td>Application Load Balancer + free ACM certificate in front of the EC2 instance</td><td>ACM certs are free and auto-renewing, but only usable behind an AWS-native endpoint like an ALB — this avoids running certbot/Let's Encrypt renewal ourselves</td></tr>
+      <tr><td><strong>Internal domain</strong></td><td>Route 53 hosted zone (<code>internal.company.com</code>)</td><td>~$0.50/mo per zone, integrates cleanly with the ALB and any future service</td></tr>
+      <tr><td><strong>Admin access</strong></td><td>AWS Systems Manager Session Manager, no open SSH port</td><td>Free, logged, no long-lived SSH key to leak or rotate — closes the one obvious hole a "small internal server" build usually leaves open</td></tr>
+      <tr><td><strong>Fleet's MySQL</strong> <span style="color:#9ca3af">(Phase 4)</span></td><td>RDS for MySQL, <code>db.t4g.micro</code></td><td>Automated backups and patching included — removes exactly the "ongoing patch maintenance" unknown cost for this one dependency</td></tr>
+      <tr><td><strong>Fleet's Redis</strong> <span style="color:#9ca3af">(Phase 4)</span></td><td>ElastiCache for Redis (or Valkey), <code>cache.t4g.micro</code></td><td>Same reasoning as RDS — managed, no patching, sized for 60 devices with room to grow</td></tr>
+      <tr><td><strong>Fleet app itself</strong> <span style="color:#9ca3af">(Phase 4)</span></td><td>ECS Fargate task, 1 container</td><td>No OS to patch for the Fleet binary specifically — one fewer thing on the "who owns patching" list</td></tr>
+      <tr><td><strong>Homebrew hash-rule job</strong> <span style="color:#9ca3af">(Phase 3)</span></td><td>Lambda function on an EventBridge schedule (every 30 min)</td><td>No server needed for a job that just fetches formula hashes and pushes Santa rules — serverless is the right shape for this specific task</td></tr>
+      <tr><td><strong>Logs (Munki, Santa, Pi-hole)</strong></td><td>CloudWatch Logs agent on the EC2 instance</td><td>Centralizes the audit trail without standing up a separate log server</td></tr>
+      <tr><td><strong>Access control</strong></td><td>IAM instance profile (no access keys on the box), least-privilege role</td><td>Standard AWS hygiene — no credentials to leak from the server itself</td></tr>
+    </table>
+
+    <div class="ly" style="border-color:#c2410c;margin-top:12px">
+      <span class="lt" style="color:#c2410c">NETWORK PATH, END TO END</span>
+      <div class="rw">
+        <div class="nd ns" style="border-color:#334155">
+          <div class="ni">💻</div><div class="nt">Employee<br>laptop</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#059669;background:#ecfdf5">
+          <div class="ni">🌐</div><div class="nt">EC2: Pi-hole</div><div class="nx">port 53, SG-scoped</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#f59e0b;background:#fffbeb">
+          <div class="ni">⚖️</div><div class="nt">ALB + ACM</div><div class="nx">TLS termination</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#2563eb;background:#dbeafe">
+          <div class="ni">🗄️</div><div class="nt">EC2: Munki<br>+ Santa sync</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#7c3aed;background:#f5f3ff">
+          <div class="ni">📊</div><div class="nt">CloudWatch<br>Logs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ AWS-managed pieces are added only where they buy something real</div>
+      <div class="why-d">RDS/ElastiCache/Fargate/Lambda all cost more per hour than "just run it on the box" — the trade is real: each one removes a specific line from the Unknown Costs list (patching, backups, uptime babysitting) in exchange for a small, predictable AWS bill. Phases 1-3 deliberately stay on a single EC2 box because that trade isn't worth it yet at 8-10 pilot Macs.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 1: PHASE 1 ===== -->
+  <div id="t1" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">PHASE 1 — VISIBILITY POC (WEEK 1)</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">Goal: full visibility into what's actually installed and running, with zero blocking</div>
+      <div class="cx" style="color:#064e3b">Everything here is observation-only. Nothing in this phase can break a real workflow — that's deliberate, so the pilot team has zero reason to distrust what comes next.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+      <tr><td>Provision AWS infra</td><td>VPC, Security Group, EC2 <code>t3.small</code>, EBS volume, Route 53 zone, Session Manager access</td><td><code>aws ssm start-session</code> reaches the box, no SSH key needed</td></tr>
+      <tr><td>Stand up Munki repo</td><td>nginx + basic auth on the EC2 instance, ALB + ACM cert in front</td><td><code>https://software.internal.company.com</code> resolves with a valid cert</td></tr>
+      <tr><td>Import first package</td><td><code>munkiimport</code> Docker.pkg from an admin Mac, <code>makecatalogs</code>, sync to the box</td><td>Docker's pkginfo appears in the repo's <code>testing</code> catalog</td></tr>
+      <tr><td>Deploy Santa (Monitor mode)</td><td>Install Santa on 8-10 pilot Macs, local Configuration Profile, <code>ClientMode = 1</code></td><td>Every pilot Mac shows exec events in the log, zero blocks</td></tr>
+      <tr><td>Deploy Pi-hole</td><td>Install script on the EC2 box, load piracy/malware/phishing blocklists</td><td>A known test domain resolves to the block page</td></tr>
+      <tr><td>Point pilot DNS at Pi-hole</td><td>Office Wi-Fi DHCP option 6, or a DNS profile for remote Macs</td><td>Pilot Macs' DNS queries visibly hit Pi-hole's logs</td></tr>
+    </table>
+
+    <div class="sp" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">Exit criteria for Phase 1</div>
+        <ul class="dl">
+          <li>Every pilot Mac has checked into Munki at least once</li>
+          <li>A full week of Santa Monitor logs reviewed, nothing unexplained left</li>
+          <li>Pi-hole confirmed blocking a real test domain, not just installed</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">What could go wrong here, specifically</div>
+        <ul class="dl">
+          <li>Pilot Macs on a VPN that already forces DNS elsewhere — will silently bypass Pi-hole</li>
+          <li>ACM cert validation stalls if Route 53 DNS records aren't propagated first</li>
+          <li>Session Manager needs the SSM agent pre-installed on the AMI — check before relying on it</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: PHASE 2 ===== -->
+  <div id="t2" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">PHASE 2 — SOFTWARE CENTER GOES LIVE (WEEKS 2-3)</span></div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">Goal: pilot team has a faster, sanctioned way to install real tools than searching the web</div>
+      <div class="cx" style="color:#1e3a5f">This is the phase where the Software Center becomes something people actually use, not just infrastructure that exists. Adoption here is what makes Phase 3's Lockdown mode land without a fight.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+      <tr><td>Build the top-10 catalog</td><td><code>munkiimport</code> Docker, Slack, Zoom, VS Code, Postman + 5 more from pilot requests</td><td>All 10 appear in <code>optional_installs</code> for the pilot manifest</td></tr>
+      <tr><td>Allow-rule each app</td><td><code>santactl rule --allow --certificate</code> for each app's Team ID</td><td>Every catalog app installs and runs with zero Santa prompt</td></tr>
+      <tr><td>Custom block dialog live</td><td>Set <code>BannedBlockMessage</code>, <code>EventDetailURL</code> pointing at the Software Center</td><td>A deliberately-blocked test app shows the message + working link</td></tr>
+      <tr><td>Announce to pilot</td><td>Short internal doc/Slack post: "install things here from now on"</td><td>At least 3 real installs happen via the catalog, unprompted</td></tr>
+      <tr><td>Stand up the exception path</td><td>A dedicated Slack channel + a documented review step (check the cert, not just the ask)</td><td>One real request handled end-to-end, rule + catalog entry added</td></tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ Adoption, not infrastructure, is the actual milestone this phase is measuring</div>
+      <div class="why-d">Everything technical here was already proven possible in the Build Guide. What Phase 2 tests is whether the pilot team actually reaches for Managed Software Center instead of Google — if they don't, Phase 3's Lockdown mode will feel like it appeared out of nowhere instead of formalizing a habit they already have.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: PHASE 3 ===== -->
+  <div id="t3" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#f5f3ff;color:#7c3aed">PHASE 3 — LOCKDOWN + ORG-WIDE ROLLOUT (WEEKS 4-6)</span></div>
+
+    <div class="co" style="background:#f5f3ff;border-color:#c4b5fd;margin-bottom:14px">
+      <div class="ct" style="color:#5b21b6">Goal: unsigned/unapproved binaries actually stop running — the real fix for the incident — without breaking everyday developer tooling</div>
+      <div class="cx" style="color:#4c1d95">This phase only starts once Phase 1's Monitor logs have been read end to end. The single biggest risk here isn't the incident category (crack tools) — it's blocking legitimate Homebrew/CLI tools that were never signed in the first place. That risk gets a dedicated build step below, not an afterthought.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+      <tr><td>Clear the Monitor backlog</td><td>Add certificate allow-rules for every legitimate signed app seen in a week of logs</td><td>No unexplained unrecognized binary remains in the log</td></tr>
+      <tr><td>Enable compiler rules</td><td><code>EnableTransitiveRules = true</code>; add <code>ALLOWLIST_COMPILER</code> rules for Xcode's linker, Go, and Homebrew's own binary</td><td>A local <code>go build</code> and a source-built brew formula both run without a block</td></tr>
+      <tr><td>Deploy the Homebrew hash-rule job</td><td>Lambda + EventBridge (every 30 min): pull known-good SHA-256 hashes for common formulas from Homebrew's own metadata, push as Santa Binary rules</td><td>A fresh <code>brew install jq</code> runs on first launch, no block, no manual rule added</td></tr>
+      <tr><td>Flip pilot to Lockdown</td><td><code>ClientMode = 2</code> pushed to the pilot group only, first</td><td>A real (harmless) unsigned test binary is blocked with the correct dialog</td></tr>
+      <tr><td>Roll to remaining Macs</td><td>Same Munki + Santa + Pi-hole bootstrap, one team at a time, not all at once</td><td>Every company Mac reports Lockdown mode active</td></tr>
+    </table>
+
+    <div class="sp" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">Rollout order — don't do it all at once</div>
+        <ul class="dl">
+          <li>Pilot group first, held at Lockdown for at least 3 working days before expanding</li>
+          <li>Engineering next (heaviest Homebrew/CLI usage — the compiler/package rules get their real test here)</li>
+          <li>Everyone else last — by this point the exception process has already been exercised</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">Rollback plan if something breaks</div>
+        <ul class="dl">
+          <li>Per-machine: <code>santactl</code> can flip a single Mac back to Monitor mode immediately, by design</li>
+          <li>Fleet-wide (Phase 4+): a DDM declaration can revert <code>ClientMode</code> without visiting machines</li>
+          <li>Every rollback is logged as an incident of its own — a pattern of rollbacks means the rule set isn't ready, not that Lockdown is wrong</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: PHASE 4 ===== -->
+  <div id="t4" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fffbeb;color:#92400e">PHASE 4 — MULTI-OS, FLEET, AND HARDENING (ONGOING)</span></div>
+
+    <div class="co" style="background:#fffbeb;border-color:#fde68a;margin-bottom:14px">
+      <div class="ct" style="color:#92400e">Goal: the same guarantee for every OS in the company, and a delivery mechanism that doesn't require visiting laptops by hand</div>
+      <div class="cx" style="color:#78350f">This phase is genuinely ongoing, not a fixed sprint — it's where the plan keeps up with headcount growth and new operating systems, rather than a one-time build.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
+      <tr><td>Author the Windows WDAC policy</td><td>Start from Microsoft's recommended base policy, add publisher-certificate allow rules mirroring the Santa cert list (Docker, Slack, etc.)</td><td>A test unsigned <code>.exe</code> is blocked on a Windows pilot laptop, signed apps run</td></tr>
+      <tr><td>Stand up Fleet on AWS</td><td>Fargate task + RDS MySQL + ElastiCache, per the AWS Architecture tab</td><td>Fleet dashboard shows live inventory for every enrolled Mac and Windows laptop</td></tr>
+      <tr><td>Push Santa + WDAC config via DDM</td><td>Author the config as a DDM declaration in Fleet, targeted at all enrolled devices</td><td>A config change (e.g., a new allow rule) reaches every device without a manual visit</td></tr>
+      <tr><td>Add the mSCP hardening baseline</td><td>Generate a CIS-mapped profile from <code>usnistgov/macos_security</code>, push via the same Fleet DDM channel</td><td>FileVault, SIP, and screen-lock policy are enforced and reported compliant fleet-wide</td></tr>
+      <tr><td>Second Pi-hole instance</td><td>Second small EC2 instance in a different AZ, configured as secondary DNS</td><td>DNS filtering survives one instance being stopped for maintenance</td></tr>
+      <tr><td>Self-service exception UI</td><td>Small internal app or a Fleet-integrated form replacing the Slack-ping process</td><td>An exception request is submitted and resolved without a human relaying it manually</td></tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ Fleet's DDM channel is what makes "ongoing" actually sustainable</div>
+      <div class="why-d">Every phase before this one assumed someone could reasonably touch each pilot Mac by hand. That stops being true past ~15-20 machines. Fleet Free's confirmed-free DDM support is what turns "push a Santa rule change" from a per-laptop task into a five-minute change that reaches the whole fleet — this is the phase where that capability actually gets used, not just planned for.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 5: OWNERSHIP ===== -->
+  <div id="t5" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">OWNERSHIP — WHO ACTUALLY RUNS THIS AFTER IT'S BUILT</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">A self-hosted stack with no owner quietly stops being maintained — this table exists so that doesn't happen by default</div>
+      <div class="cx" style="color:#064e3b">Every "unknown cost" identified in the plan (rule curation, patching, exception review) is a recurring task, not a one-time build item. Naming who does it — even by role, before a specific person is assigned — is what makes those costs real rather than theoretical.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Responsibility</th><th>Cadence</th><th>Suggested owner</th></tr>
+      <tr><td>New Santa allow-rule requests</td><td>As requested, target &lt;1 business day</td><td>IT/security engineer (primary build owner)</td></tr>
+      <tr><td>Homebrew hash-rule job health check</td><td>Weekly glance at Lambda run logs</td><td>Same engineer — it's a 5-minute check once it's built</td></tr>
+      <tr><td>AWS infra patching (EC2 OS, Docker images)</td><td>Monthly, or on a security advisory</td><td>IT/security engineer, or whoever owns infra generally</td></tr>
+      <tr><td>Quarterly Santa/WDAC rule review</td><td>Quarterly</td><td>IT/security engineer + one engineering lead sign-off</td></tr>
+      <tr><td>Munki catalog additions</td><td>As new tools get approved</td><td>IT/security engineer</td></tr>
+      <tr><td>Lockdown rollback decisions</td><td>As incidents occur</td><td>IT/security engineer, escalate to eng leadership if it's a repeated pattern</td></tr>
+      <tr><td>AWS cost monitoring</td><td>Monthly</td><td>Whoever owns the AWS bill generally — this stack should show up as its own cost-allocation tag</td></tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ This plan assumes one person, part-time — that's a real constraint to say out loud</div>
+      <div class="why-d">None of the above is full-time work at 60 people. But it is real, ongoing work that competes with whatever else that person is doing. If nobody is explicitly given a few hours a month for this, rule curation is exactly the kind of task that silently stops happening — and the whole plan's value depends on it not stopping.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 6: POLICY & LEGAL ===== -->
+  <div id="t6" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fef2f2;color:#dc2626">POLICY &amp; LEGAL — THE NON-TECHNICAL HALF OF THIS PLAN</span></div>
+
+    <div class="co" style="background:#fef2f2;border-color:#fecaca;margin-bottom:14px">
+      <div class="ct" style="color:#991b1b">Every tool in this plan logs employee activity — that needs a policy, a notice, and (separately) a response to the incident that already happened</div>
+      <div class="cx" style="color:#7f1d1d">This whole plan up to this tab is technical controls. None of it addresses updating what employees are told, or what happens with the specific incident that triggered this project in the first place. Both are real gaps a CEO is likely to ask about.</div>
+    </div>
+
+    <div class="sp">
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">📋 Acceptable Use Policy update</div>
+        <ul class="dl">
+          <li>Add an explicit clause: company devices run required security software (Santa, Munki, Pi-hole/DNS filtering)</li>
+          <li>State plainly that unauthorized/pirated software is prohibited — not assumed</li>
+          <li>Communicate <em>before</em> Lockdown mode goes org-wide, not after — this is what makes it feel like policy, not surveillance</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">🔒 Privacy notice for what's actually logged</div>
+        <ul class="dl">
+          <li>Santa logs: binary name, path, signing status, allow/block decision — not file contents</li>
+          <li>Pi-hole logs: domains queried, not page content or search terms within a page</li>
+          <li>Fleet (Phase 4) logs: installed software inventory, not personal files or browsing history</li>
+          <li>Suggested retention: 90 days for routine logs, longer only when actively investigating an incident</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ly" style="border-color:#dc2626;margin-top:12px">
+      <span class="lt" style="color:#dc2626">THE ORIGINAL INCIDENT — SEPARATE FROM THIS PREVENTIVE PROJECT</span>
+      <div class="cx" style="color:#475569;font-size:11px;line-height:1.7">
+        Nothing in this rollout plan addresses the specific machine and vendor notice that already exist. That needs its own short, parallel track: identify the affected machine, run a malware scan (keygens commonly bundle infostealers — treat this as a possible compromise, not just a licensing issue), involve legal on how to respond to the vendor's notice, and decide separately whether any employee conversation is warranted. This plan prevents a repeat — it doesn't close the incident that's already open.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 7: AWS COSTS ===== -->
+  <div id="t7" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fff7ed;color:#c2410c">AWS COSTS — WHAT THIS ACTUALLY BILLS AT, MONTH BY MONTH</span></div>
+
+    <div class="co" style="background:#fff7ed;border-color:#fed7aa;margin-bottom:14px">
+      <div class="ct" style="color:#9a3412">Phases 1-3: one small EC2 box. Phase 4 adds managed services deliberately, at a known price.</div>
+      <div class="cx" style="color:#7c2d12">These are AWS us-east-1 on-demand list prices as a planning estimate — actual billing depends on region and any Reserved/Savings Plan discount applied later. Nothing here assumes AWS free-tier credits, so this holds even after any trial period ends.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Resource</th><th>Phase</th><th>Est. monthly cost</th></tr>
+      <tr><td>EC2 <code>t3.small</code> (Munki + Santa sync + Pi-hole)</td><td>1-3</td><td>~$15</td></tr>
+      <tr><td>EBS 40GB <code>gp3</code> + daily AWS Backup snapshots</td><td>1-3</td><td>~$4</td></tr>
+      <tr><td>Application Load Balancer</td><td>1-3</td><td>~$16</td></tr>
+      <tr><td>Route 53 hosted zone + queries</td><td>1-3</td><td>~$1</td></tr>
+      <tr><td>Data transfer (internal tool, low volume)</td><td>1-3</td><td>~$2-5</td></tr>
+      <tr><td>CloudWatch Logs ingestion/storage</td><td>1-3</td><td>~$2-4</td></tr>
+      <tr><td><strong>Phase 1-3 subtotal</strong></td><td></td><td><strong>~$40-45/mo</strong></td></tr>
+      <tr><td>RDS <code>db.t4g.micro</code> (Fleet's MySQL)</td><td>4</td><td>~$13</td></tr>
+      <tr><td>ElastiCache <code>cache.t4g.micro</code> (Fleet's Redis)</td><td>4</td><td>~$12</td></tr>
+      <tr><td>ECS Fargate, 1 small task (Fleet app)</td><td>4</td><td>~$15</td></tr>
+      <tr><td>Second EC2 instance (Pi-hole redundancy)</td><td>4</td><td>~$15</td></tr>
+      <tr><td>Lambda + EventBridge (Homebrew hash job)</td><td>3-4</td><td>&lt;$1 — well within free tier</td></tr>
+      <tr><td><strong>Phase 4 additional</strong></td><td></td><td><strong>~$55-60/mo</strong></td></tr>
+      <tr><td><strong>Steady-state total, all phases</strong></td><td></td><td><strong>~$95-105/mo (~$1,150-1,260/yr)</strong></td></tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">📊 Compared to the paid-MDM baseline this replaces</div>
+      <div class="why-d">A paid MDM at 60 devices runs ~$500-720/month (~$6-8.6k/year) and rises automatically with headcount. The full AWS-hosted build across all four phases — infrastructure only, not engineer time — lands around $95-105/month, and that number grows with AWS resource sizing, not per-device licensing, so it stays roughly flat as the team grows from 60 to 100.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(n){for(var i=0;i<8;i++){document.getElementById('t'+i).classList.add('hid');document.querySelectorAll('.tab')[i].classList.remove('on')}document.getElementById('t'+n).classList.remove('hid');document.querySelectorAll('.tab')[n].classList.add('on')}
+</script>
+</body>
+</html>

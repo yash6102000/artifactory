@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-House Artifactory — Secure Package Registry Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#f5f6f8;color:#1a1a2e;padding:24px 16px}
+  .pg{max-width:1140px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin-bottom:2px}
+  .sub{font-size:11px;color:#6b7280;margin-bottom:18px}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:#e5e7eb;border-radius:10px;padding:3px;flex-wrap:wrap;width:fit-content}
+  .tab{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:0;color:#6b7280;transition:all .15s}
+  .tab.on{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .tab:hover{color:#1a1a2e}
+  .pn{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+  .hid{display:none}
+  .st{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:12px}
+  .ly{border:2px dashed;border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative}
+  .lt{position:absolute;top:-9px;left:16px;background:#fff;padding:0 8px;font-size:9.5px;font-weight:700;letter-spacing:.7px}
+  .rw{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center}
+  .nd{border-radius:9px;padding:10px 13px;text-align:center;min-width:90px;border:2px solid;background:#fff;position:relative}
+  .ns{padding:7px 10px;min-width:75px}
+  .ni{font-size:17px;margin-bottom:2px}
+  .nt{font-size:10px;font-weight:700;line-height:1.3}
+  .nx{font-size:8px;opacity:.6;margin-top:1px}
+  .nb{position:absolute;top:-7px;right:-7px;font-size:7px;font-weight:800;padding:1px 5px;border-radius:4px}
+  .ar{font-size:15px;color:#d1d5db;flex-shrink:0}
+  .db{background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:11px 13px;margin-top:8px}
+  .dt{font-size:10.5px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .dl{list-style:none;padding:0}
+  .dl li{font-size:10.5px;color:#475569;padding:2px 0 2px 13px;position:relative;line-height:1.5}
+  .dl li::before{content:"\2192";position:absolute;left:0;color:#94a3b8;font-size:9px}
+  .co{padding:12px 14px;border-radius:9px;border:1px solid}
+  .ct{font-weight:700;font-size:11.5px;margin-bottom:3px}
+  .cx{font-size:11px;line-height:1.6}
+  .sp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .s3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .s4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .cd{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px;border-top:3px solid}
+  code{background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:10px;font-family:monospace}
+  .mono{font-family:monospace;font-size:10px;color:#475569;line-height:1.75;padding:10px 14px;background:#fafafa;border-radius:6px;overflow-x:auto}
+  .lg{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;flex-wrap:wrap}
+  .li{display:flex;align-items:center;gap:4px;font-size:9px;color:#6b7280;font-weight:600}
+  .ld{width:9px;height:9px;border-radius:3px}
+  .why{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .why-t{font-size:10px;font-weight:700;color:#92400e}
+  .why-d{font-size:10px;color:#78350f;margin-top:2px}
+  .plug{border:2px solid;border-radius:10px;padding:12px;position:relative}
+  .plug-tag{position:absolute;top:-8px;right:12px;font-size:7.5px;font-weight:800;padding:1px 7px;border-radius:4px;letter-spacing:.5px}
+  table.cmp{width:100%;border-collapse:collapse;margin-top:8px}
+  table.cmp th{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb}
+  table.cmp td{font-size:10.5px;color:#334155;padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  table.cmp tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="pg">
+  <h1>📦 In-House Artifactory — Secure Package Registry Architecture</h1>
+  <p class="sub">A pluggable, self-hosted package registry &bull; Proxy + cache + vulnerability gate for npm, PyPI, Maven, Docker &bull; Free/OSS-first stack &bull; Build once, every team pulls from here</p>
+
+  <div class="tabs" id="tabbar">
+    <button class="tab on" onclick="go(0)">Core Idea</button>
+    <button class="tab" onclick="go(1)">Modular Design</button>
+    <button class="tab" onclick="go(2)">Registry Options</button>
+    <button class="tab" onclick="go(3)">Scan + Policy Gate</button>
+    <button class="tab" onclick="go(4)">Full Architecture</button>
+    <button class="tab" onclick="go(5)">Config Structure</button>
+    <button class="tab" onclick="go(6)">POC Scope</button>
+    <button class="tab" onclick="go(7)">Build Plan</button>
+  </div>
+
+  <!-- ===== TAB 0: CORE IDEA ===== -->
+  <div id="t0" class="pn">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">THE CORE IDEA — REGISTRY SHELL + PLUGGABLE SECURITY GATE</span></div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">Build the registry proxy ONCE. Swap the vulnerability policy via config.</div>
+      <div class="cx" style="color:#1e3a5f">The registry shell (dev request → cache lookup → upstream fetch → local store → serve) is generic infrastructure. What counts as "allowed" — which CVE severities are blocked, which licenses are banned, which package names are quarantined — is defined by a <strong>ScanPolicy</strong> config. Deploy the same internal registry with different policies per team or per package ecosystem (npm, PyPI, Docker) and everyone still installs with a normal <code>npm install</code>, they just never see a vulnerable version.</div>
+    </div>
+
+    <!-- The mental model -->
+    <div class="ly" style="border-color:#7c3aed50">
+      <span class="lt" style="color:#7c3aed">THE MENTAL MODEL</span>
+      <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;justify-content:center">
+        <!-- Registry Shell -->
+        <div style="flex:1;min-width:280px;background:#dbeafe;border:2px solid #3b82f6;border-radius:12px;padding:16px">
+          <div style="text-align:center;font-size:13px;font-weight:800;color:#1e40af;margin-bottom:10px">🗄️ Registry Shell (Fixed Infrastructure)</div>
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+            <div style="background:#fff;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:9px;font-weight:700;color:#2563eb;text-align:center">🔗 Proxy<br><span style="font-weight:400;color:#6b7280">Verdaccio/Nexus</span></div>
+            <div style="background:#fff;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:9px;font-weight:700;color:#2563eb;text-align:center">💾 Cache<br><span style="font-weight:400;color:#6b7280">Local storage</span></div>
+            <div style="background:#fff;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:9px;font-weight:700;color:#2563eb;text-align:center">🔑 Auth<br><span style="font-weight:400;color:#6b7280">Team tokens/SSO</span></div>
+            <div style="background:#fff;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:9px;font-weight:700;color:#2563eb;text-align:center">📤 Publish<br><span style="font-weight:400;color:#6b7280">Internal packages</span></div>
+            <div style="background:#fff;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:9px;font-weight:700;color:#2563eb;text-align:center">📊 Dashboard<br><span style="font-weight:400;color:#6b7280">Usage + audit log</span></div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#1e40af;margin-top:8px">Same for every ecosystem. Build once.</div>
+        </div>
+
+        <!-- Plug icon -->
+        <div style="display:flex;align-items:center;font-size:28px">🔌</div>
+
+        <!-- Policy (swappable) -->
+        <div style="flex:1;min-width:280px;background:#f5f3ff;border:2px solid #7c3aed;border-radius:12px;padding:16px">
+          <div style="text-align:center;font-size:13px;font-weight:800;color:#5b21b6;margin-bottom:10px">🛡️ Scan Policy (Pluggable via Config)</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:6px 10px;font-size:10px;display:flex;justify-content:space-between">
+              <span style="font-weight:700;color:#7c3aed">Policy A:</span>
+              <span style="color:#475569">Block Critical/High CVE → Trivy scan</span>
+            </div>
+            <div style="background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:6px 10px;font-size:10px;display:flex;justify-content:space-between">
+              <span style="font-weight:700;color:#7c3aed">Policy B:</span>
+              <span style="color:#475569">Block known-malicious/typosquat → OSV-Scanner</span>
+            </div>
+            <div style="background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:6px 10px;font-size:10px;display:flex;justify-content:space-between">
+              <span style="font-weight:700;color:#7c3aed">Policy C:</span>
+              <span style="color:#475569">Block banned licenses (GPL, AGPL) → license-checker</span>
+            </div>
+            <div style="background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:6px 10px;font-size:10px;display:flex;justify-content:space-between">
+              <span style="font-weight:700;color:#7c3aed">Policy D:</span>
+              <span style="color:#475569">Docker base images → Grype + max age rule</span>
+            </div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#5b21b6;margin-top:8px">Different rules per ecosystem, per team, per environment.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why this matters -->
+    <div class="s3" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">🚀 POC Speed</div>
+        <ul class="dl">
+          <li>Start with Verdaccio as pure npm cache/proxy — zero scanning</li>
+          <li>Team can point .npmrc at it same day</li>
+          <li>Bolt on Trivy scanning once the proxy path is proven</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#2563eb">
+        <div class="dt" style="color:#2563eb">🔄 Reusable</div>
+        <ul class="dl">
+          <li>Same registry serves npm, later Maven/PyPI/Docker via Nexus</li>
+          <li>New team onboarding = new auth token, not new infra</li>
+          <li>Internal shared libraries (auth-utils, ui-kit) publish here too</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">📈 Scales Clean</div>
+        <ul class="dl">
+          <li>Add CI-time scan gate before publish, not just on-demand</li>
+          <li>Add exception/approval workflow per package</li>
+          <li>Multi-team: one registry, many scoped namespaces</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 1: MODULAR DESIGN ===== -->
+  <div id="t1" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">MODULAR DESIGN — THE INTERFACE CONTRACT</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">Every scanner implements one interface: ScanProvider</div>
+      <div class="cx" style="color:#064e3b">The registry shell doesn't know or care which scanner is behind it. It sends a package name + version in, gets an allow/block/quarantine decision out. The scanner handles its own CVE database lookups, license checks, and malicious-package heuristics internally.</div>
+    </div>
+
+    <!-- Interface -->
+    <div class="ly" style="border-color:#059669">
+      <span class="lt" style="color:#059669">SCAN PROVIDER INTERFACE (TypeScript)</span>
+      <div class="mono">
+<span style="color:#7c3aed">interface</span> <span style="color:#2563eb">ScanProvider</span> {<br>
+&nbsp;&nbsp;<span style="color:#6b7280">// Core: check one package version, get a verdict</span><br>
+&nbsp;&nbsp;<span style="color:#2563eb">scan</span>(pkg: PackageRef): Promise&lt;ScanResult&gt;;<br>
+<br>
+&nbsp;&nbsp;<span style="color:#6b7280">// Optional: called once when a new version is first cached</span><br>
+&nbsp;&nbsp;<span style="color:#2563eb">onFirstFetch</span>?(pkg: PackageRef): Promise&lt;void&gt;;<br>
+<br>
+&nbsp;&nbsp;<span style="color:#6b7280">// Optional: periodic re-scan of already-cached versions</span><br>
+&nbsp;&nbsp;<span style="color:#2563eb">onRescan</span>?(pkg: PackageRef): Promise&lt;void&gt;;<br>
+<br>
+&nbsp;&nbsp;<span style="color:#6b7280">// Optional: human override / exception request path</span><br>
+&nbsp;&nbsp;<span style="color:#2563eb">requestException</span>?(pkg: PackageRef, reason: string): Promise&lt;void&gt;;<br>
+<br>
+&nbsp;&nbsp;<span style="color:#6b7280">// Optional: expose the policy this scanner is enforcing</span><br>
+&nbsp;&nbsp;<span style="color:#2563eb">getPolicy</span>?(): ScanPolicy;<br>
+}
+      </div>
+    </div>
+
+    <!-- Two integration modes -->
+    <div class="sp" style="margin-top:12px">
+      <div class="plug" style="border-color:#2563eb;background:#eff6ff">
+        <div class="plug-tag" style="background:#2563eb;color:#fff">MODE A: GATE-ON-CACHE</div>
+        <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:6px;margin-top:4px">Scan Before First Serve</div>
+        <div style="font-size:10px;color:#1e3a5f;line-height:1.5;margin-bottom:8px">
+          When the registry fetches a package version from upstream for the first time, it scans it synchronously before caching + serving it to the requesting dev. <strong>Strongest guarantee, adds latency on cache-miss only.</strong>
+        </div>
+        <div style="font-size:10px;color:#475569">
+          <strong>Use when:</strong> You want zero window where a vulnerable version could reach a developer, even once.
+        </div>
+        <div class="mono" style="margin-top:6px;font-size:9px">
+<span style="color:#6b7280">// Registry hook, npm example</span><br>
+onUpstreamFetch(async (pkg) =&gt; {<br>
+&nbsp;&nbsp;const result = await scanner.<span style="color:#2563eb">scan</span>(pkg);<br>
+&nbsp;&nbsp;if (result.verdict === <span style="color:#059669">'block'</span>) throw new RegistryError(403);<br>
+&nbsp;&nbsp;return cacheAndServe(pkg);<br>
+});
+        </div>
+      </div>
+      <div class="plug" style="border-color:#f59e0b;background:#fffbeb">
+        <div class="plug-tag" style="background:#f59e0b;color:#fff">MODE B: SCHEDULED SWEEP</div>
+        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;margin-top:4px">Async Rescan + Retroactive Block</div>
+        <div style="font-size:10px;color:#78350f;line-height:1.5;margin-bottom:8px">
+          A nightly CI job re-scans every cached version against updated CVE feeds (new CVEs get published for old packages constantly). Anything newly flagged is quarantined and a Slack alert fires to whoever's project uses it.
+        </div>
+        <div style="font-size:10px;color:#475569">
+          <strong>Use when:</strong> Protecting against CVEs disclosed after a package was already cached and in use.
+        </div>
+        <div class="mono" style="margin-top:6px;font-size:9px">
+<span style="color:#6b7280">// cron: 0 3 * * * (nightly)</span><br>
+for (const pkg of registry.<span style="color:#2563eb">listCached</span>()) {<br>
+&nbsp;&nbsp;const r = await scanner.<span style="color:#2563eb">scan</span>(pkg);<br>
+&nbsp;&nbsp;if (r.verdict === <span style="color:#059669">'block'</span>) registry.<span style="color:#2563eb">quarantine</span>(pkg, r);<br>
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan result shape -->
+    <div class="db" style="margin-top:12px">
+      <div class="dt" style="color:#475569">ScanResult — What Every Scanner Returns, Regardless of Backend</div>
+      <div class="mono" style="font-size:9.5px">
+<span style="color:#7c3aed">interface</span> <span style="color:#2563eb">ScanResult</span> {<br>
+&nbsp;&nbsp;verdict: <span style="color:#059669">'allow'</span> | <span style="color:#059669">'block'</span> | <span style="color:#059669">'warn'</span>; &nbsp;&nbsp;<span style="color:#6b7280">// gate decision</span><br>
+&nbsp;&nbsp;severity?: <span style="color:#059669">'critical'</span> | <span style="color:#059669">'high'</span> | <span style="color:#059669">'medium'</span> | <span style="color:#059669">'low'</span>;<br>
+&nbsp;&nbsp;cveIds: string[]; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280">// e.g. ["CVE-2024-XXXX"]</span><br>
+&nbsp;&nbsp;license?: string; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280">// detected license</span><br>
+&nbsp;&nbsp;scannedAt: string; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280">// ISO timestamp</span><br>
+&nbsp;&nbsp;source: <span style="color:#059669">'trivy'</span> | <span style="color:#059669">'grype'</span> | <span style="color:#059669">'osv'</span> | <span style="color:#059669">'npm-audit'</span>;<br>
+}
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: REGISTRY OPTIONS ===== -->
+  <div id="t2" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">REGISTRY OPTIONS — FREE / OSS-FIRST STACK</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">Given ~60 people and npm-first, Verdaccio is the fastest starting point</div>
+      <div class="cx" style="color:#064e3b">Nexus OSS is the better long-term pick if you'll eventually need Maven, PyPI, or Docker in the same place. GitHub Packages costs nothing but hands you less scanning control. All three sit behind the same ScanProvider interface, so the choice isn't permanent.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Tool</th><th>Formats</th><th>Cost</th><th>Effort to run</th><th>Best fit</th></tr>
+      <tr><td><strong>Verdaccio</strong></td><td>npm only</td><td>Free, OSS</td><td>Low — single Docker container</td><td>Node-only shop, fastest POC</td></tr>
+      <tr><td><strong>Nexus Repository OSS</strong></td><td>npm, Maven, PyPI, Docker, raw</td><td>Free, OSS</td><td>Medium — heavier JVM app, more config</td><td>Multi-language org, future-proofing</td></tr>
+      <tr><td><strong>GitHub Packages</strong></td><td>npm, Docker, Maven, NuGet</td><td>Free (with GitHub)</td><td>Zero — managed</td><td>Already all-in on GitHub, less need for custom policy</td></tr>
+      <tr><td><strong>JFrog Artifactory</strong> <span style="color:#9ca3af">(reference only)</span></td><td>Everything</td><td>Paid</td><td>Low — managed/self-host</td><td>Built-in Xray scanning, skip if budget is $0</td></tr>
+    </table>
+
+    <div class="s3" style="margin-top:14px">
+      <div class="cd" style="border-top-color:#2563eb">
+        <div class="dt" style="color:#2563eb">🔧 Verdaccio (recommended start)</div>
+        <ul class="dl">
+          <li>Docker one-liner to run, config is a single YAML file</li>
+          <li>Proxies any npm scope to registry.npmjs.org, caches locally</li>
+          <li>Built-in web UI for browsing cached/published packages</li>
+          <li>Plugin system for auth (htpasswd, LDAP, custom)</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">📦 Nexus OSS (grow into)</div>
+        <ul class="dl">
+          <li>One instance, multiple repo types (npm-proxy, pypi-proxy, docker-hosted)</li>
+          <li>Blob store for caching, cleanup policies for old versions</li>
+          <li>REST API to script blocking/quarantine after a scan hit</li>
+          <li>Heavier resource footprint (JVM), needs its own box/VM</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">☁️ GitHub Packages (zero-infra)</div>
+        <ul class="dl">
+          <li>No server to maintain, uses existing GitHub org/permissions</li>
+          <li>Dependabot alerts give some free vulnerability visibility</li>
+          <li>Less control over "hard block" policy vs. warn-only</li>
+          <li>Good fallback if nobody wants to own registry uptime</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ Why not skip straight to Nexus for everything</div>
+      <div class="why-d">Nexus OSS is more capable but has real ops overhead (JVM tuning, storage growth, upgrade cycles) — for a 60-person team that's mostly npm today, that's more surface area than the problem needs on day one. Start Verdaccio, migrate to Nexus only when a second ecosystem (Python, Docker) actually shows up.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: SCAN + POLICY GATE ===== -->
+  <div id="t3" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">POC SCAN SETUP — TRIVY + POLICY GATE</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">The fastest path to a working "no known vulnerabilities" guarantee: Trivy scans on cache-miss, blocks on Critical/High</div>
+      <div class="cx" style="color:#064e3b">Trivy is free, open-source, checks against multiple CVE feeds (NVD, GHSA, OSV), and runs in under a second per package for typical npm packages. No infrastructure beyond a CLI binary in your registry's fetch hook.</div>
+    </div>
+
+    <!-- Setup flow -->
+    <div class="ly" style="border-color:#059669">
+      <span class="lt" style="color:#059669">POC SETUP FLOW (HALF A DAY)</span>
+      <div style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="background:#ecfdf5;color:#059669;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px">STEP 1</span>
+          <span style="font-size:11px;font-weight:700;color:#065f46">Stand up Verdaccio, point .npmrc at it</span>
+        </div>
+        <div class="rw">
+          <div class="nd" style="border-color:#f59e0b;background:#fffbeb">
+            <div class="ni">👩‍💻</div><div class="nt">Dev Machine</div><div class="nx">npm install express</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#f59e0b;background:#fffbeb">
+            <div class="ni">🗄️</div><div class="nt">Verdaccio</div><div class="nx">localhost:4873</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="background:#ecfdf5;color:#059669;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px">STEP 2</span>
+          <span style="font-size:11px;font-weight:700;color:#065f46">On cache-miss, Verdaccio fetches from upstream npm</span>
+        </div>
+        <div class="rw">
+          <div class="nd" style="border-color:#059669;background:#ecfdf5">
+            <div class="ni">🗄️</div><div class="nt">Verdaccio</div><div class="nx">Cache miss</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#059669;background:#ecfdf5;border-width:3px">
+            <div class="nb" style="background:#059669;color:#fff">AUTO</div>
+            <div class="ni">🌐</div><div class="nt">registry.npmjs.org</div><div class="nx">Real upstream fetch</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#059669;background:#ecfdf5">
+            <div class="ni">📥</div><div class="nt">Tarball</div><div class="nx">Downloaded, not yet served</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="background:#ecfdf5;color:#059669;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px">STEP 3</span>
+          <span style="font-size:11px;font-weight:700;color:#065f46">Run Trivy against the fetched version before caching it</span>
+        </div>
+        <div class="rw">
+          <div class="nd" style="border-color:#2563eb;background:#dbeafe">
+            <div class="ni">🔍</div><div class="nt">Trivy Scan</div><div class="nx">CVE lookup vs NVD/GHSA/OSV</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#22c55e;background:#f0fdf4">
+            <div class="ni">✅</div><div class="nt">Clean</div><div class="nx">Cache + serve</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#dc2626;background:#fef2f2">
+            <div class="ni">🚫</div><div class="nt">Critical/High CVE</div><div class="nx">Block + quarantine</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="background:#ecfdf5;color:#059669;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px">STEP 4</span>
+          <span style="font-size:11px;font-weight:700;color:#065f46">Blocked package returns a 403 with reason, dev requests exception if needed</span>
+        </div>
+        <div class="rw">
+          <div class="nd" style="border-color:#ea580c;background:#fff7ed">
+            <div class="ni">👩‍💻</div><div class="nt">npm install<br>lodash@4.17.15</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#dc2626;background:#fef2f2;border-width:3px">
+            <div class="ni">🚫</div><div class="nt">403 Blocked</div><div class="nx">CVE-2020-8203 (High)</div>
+          </div>
+          <span class="ar">→</span>
+          <div class="nd" style="border-color:#7c3aed;background:#f5f3ff">
+            <div class="ni">🎫</div><div class="nt">Exception Request</div><div class="nx">Slack approval workflow</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:9px;color:#6b7280;margin-top:4px">Newer patched version usually resolves this automatically — dev just bumps the version.</div>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ There's no built-in auto-block policy engine in the free stack</div>
+      <div class="why-d">Verdaccio and Nexus OSS don't ship CVE scanning themselves — that's the glue script above (fetch hook → Trivy → allow/block). It's maybe 100 lines of Node, but budget a day to build and test it properly, including the exception-request path so blocked packages don't just make people bypass the registry entirely.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: FULL ARCHITECTURE ===== -->
+  <div id="t4" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">FULL ARCHITECTURE — END TO END</span></div>
+
+    <div class="ly" style="border-color:#2563eb">
+      <span class="lt" style="color:#2563eb">REQUEST FLOW</span>
+      <div class="rw" style="margin-bottom:10px">
+        <div class="nd" style="border-color:#334155">
+          <div class="ni">👩‍💻</div><div class="nt">Dev / CI</div><div class="nx">npm, pip, docker</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#2563eb;background:#dbeafe;border-width:3px">
+          <div class="ni">🗄️</div><div class="nt">Internal Registry</div><div class="nx">Verdaccio / Nexus</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd" style="border-color:#059669;background:#ecfdf5">
+          <div class="ni">💾</div><div class="nt">Local Cache</div><div class="nx">Hit? Serve instantly</div>
+        </div>
+      </div>
+      <div class="rw">
+        <div class="nd ns" style="border-color:#f59e0b;background:#fffbeb">
+          <div class="ni">🌐</div><div class="nt">Upstream</div><div class="nx">npmjs / PyPI</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#7c3aed;background:#f5f3ff">
+          <div class="ni">🔍</div><div class="nt">Trivy/Grype</div><div class="nx">CVE scan</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#dc2626;background:#fef2f2">
+          <div class="ni">🚫</div><div class="nt">Policy Gate</div><div class="nx">block/allow</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#22c55e;background:#f0fdf4">
+          <div class="ni">✅</div><div class="nt">Cache + Serve</div>
+        </div>
+        <span class="ar">→</span>
+        <div class="nd ns" style="border-color:#0891b2;background:#ecfeff">
+          <div class="ni">📊</div><div class="nt">Audit Log</div><div class="nx">who/what/when</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sp">
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">🌙 Nightly Rescan Job</div>
+        <ul class="dl">
+          <li>Cron re-scans every cached version against fresh CVE feeds</li>
+          <li>Newly-disclosed CVE on an old cached package → auto-quarantine</li>
+          <li>Slack alert to #eng-security with affected repos (from usage log)</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#7c3aed">
+        <div class="dt" style="color:#7c3aed">🎫 Exception Workflow</div>
+        <ul class="dl">
+          <li>Blocked install → dev opens exception request with justification</li>
+          <li>Tech lead / security owner approves via Slack button or PR</li>
+          <li>Approved override logged with expiry (re-checked next rescan)</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">📤 Internal Package Publishing</div>
+        <ul class="dl">
+          <li>Shared libs (auth-utils, ui-kit, eslint-config) publish here too</li>
+          <li>Scoped namespace (e.g. @company/*) separate from public proxy cache</li>
+          <li>Same registry doubles as your private npm, no second tool</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="lg">
+      <div class="li"><span class="ld" style="background:#2563eb"></span>Registry shell</div>
+      <div class="li"><span class="ld" style="background:#7c3aed"></span>Scan/policy layer</div>
+      <div class="li"><span class="ld" style="background:#059669"></span>Cache/storage</div>
+      <div class="li"><span class="ld" style="background:#dc2626"></span>Blocking/audit</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 5: CONFIG STRUCTURE ===== -->
+  <div id="t5" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#f5f3ff;color:#7c3aed">CONFIG STRUCTURE — WHAT LIVES WHERE</span></div>
+
+    <div class="ly" style="border-color:#7c3aed">
+      <span class="lt" style="color:#7c3aed">REPO LAYOUT</span>
+      <div class="mono">
+in-house-registry/<br>
+&nbsp;&nbsp;├── docker-compose.yml &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280"># Verdaccio + scan-gate sidecar</span><br>
+&nbsp;&nbsp;├── verdaccio/<br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;└── config.yaml &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280"># uplinks, auth, storage path</span><br>
+&nbsp;&nbsp;├── scan-gate/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280"># the glue service (Node)</span><br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;├── src/fetchHook.ts<br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;├── src/scanners/trivy.ts<br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;├── src/scanners/osv.ts<br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;└── policy.json &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280"># severity thresholds, license rules</span><br>
+&nbsp;&nbsp;├── jobs/<br>
+&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;└── nightly-rescan.ts<br>
+&nbsp;&nbsp;└── exceptions/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── approved.json &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6b7280"># pkg@version → approver, expiry</span>
+      </div>
+    </div>
+
+    <div class="sp">
+      <div class="cd" style="border-top-color:#2563eb">
+        <div class="dt" style="color:#2563eb">policy.json (example)</div>
+        <div class="mono" style="font-size:9px">
+{<br>
+&nbsp;&nbsp;<span style="color:#059669">"blockSeverity"</span>: [<span style="color:#059669">"critical"</span>, <span style="color:#059669">"high"</span>],<br>
+&nbsp;&nbsp;<span style="color:#059669">"warnSeverity"</span>: [<span style="color:#059669">"medium"</span>],<br>
+&nbsp;&nbsp;<span style="color:#059669">"bannedLicenses"</span>: [<span style="color:#059669">"GPL-3.0"</span>, <span style="color:#059669">"AGPL-3.0"</span>],<br>
+&nbsp;&nbsp;<span style="color:#059669">"rescanIntervalHours"</span>: 24,<br>
+&nbsp;&nbsp;<span style="color:#059669">"exceptionExpiryDays"</span>: 90<br>
+}
+        </div>
+      </div>
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">.npmrc (team-wide)</div>
+        <div class="mono" style="font-size:9px">
+registry=https://registry.internal.company.com/<br>
+//registry.internal.company.com/:_authToken=${NPM_TOKEN}<br>
+always-auth=true
+        </div>
+      </div>
+    </div>
+
+    <div class="db" style="margin-top:10px">
+      <div class="dt" style="color:#475569">verdaccio/config.yaml — Key Fields</div>
+      <div class="mono" style="font-size:9.5px">
+storage: ./storage<br>
+uplinks:<br>
+&nbsp;&nbsp;npmjs:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;url: https://registry.npmjs.org/<br>
+packages:<br>
+&nbsp;&nbsp;<span style="color:#059669">'@company/*'</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;access: $authenticated<br>
+&nbsp;&nbsp;&nbsp;&nbsp;publish: $authenticated<br>
+&nbsp;&nbsp;<span style="color:#059669">'**'</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;access: $all<br>
+&nbsp;&nbsp;&nbsp;&nbsp;proxy: npmjs<br>
+hooks:<br>
+&nbsp;&nbsp;on-fetch: ./scan-gate/dist/fetchHook.js &nbsp;&nbsp;<span style="color:#6b7280"># custom hook</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 6: POC SCOPE ===== -->
+  <div id="t6" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">POC SCOPE — WHAT'S IN, WHAT'S DEFERRED</span></div>
+
+    <div class="co" style="background:#ecfdf5;border-color:#a7f3d0;margin-bottom:14px">
+      <div class="ct" style="color:#065f46">POC = Verdaccio + Trivy gate + one pilot team, npm only</div>
+      <div class="cx" style="color:#064e3b">Intentionally narrow: prove the fetch → scan → block/allow loop works and doesn't get in developers' way, before rolling it out org-wide or adding more ecosystems.</div>
+    </div>
+
+    <div class="sp">
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">✅ In Scope for POC</div>
+        <ul class="dl">
+          <li>Verdaccio running in Docker, one instance</li>
+          <li>npm only — no PyPI/Maven/Docker yet</li>
+          <li>Trivy scan on cache-miss, block Critical/High CVE</li>
+          <li>Single pilot team (5-8 devs) points .npmrc at it</li>
+          <li>Manual exception process (Slack message to you)</li>
+          <li>Basic auth (shared token), not SSO</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#9ca3af">
+        <div class="dt" style="color:#6b7280">⏸ Deferred Past POC</div>
+        <ul class="dl">
+          <li>Nightly rescan job for already-cached packages</li>
+          <li>Self-service exception request UI/workflow</li>
+          <li>SSO/LDAP auth, per-team scoped access</li>
+          <li>PyPI/Maven/Docker repos (Nexus migration)</li>
+          <li>License-compliance checks (GPL/AGPL blocking)</li>
+          <li>Org-wide rollout + CI pipeline integration</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ly" style="border-color:#2563eb;margin-top:12px">
+      <span class="lt" style="color:#2563eb">SUCCESS CRITERIA FOR POC</span>
+      <div class="s3" style="margin-top:0">
+        <div style="text-align:center">
+          <div style="font-size:20px">⚡</div>
+          <div style="font-size:10.5px;font-weight:700;color:#1e40af">Latency</div>
+          <div style="font-size:9.5px;color:#6b7280">Cache hits &lt;100ms, cold fetch+scan &lt;3s</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px">🚫</div>
+          <div style="font-size:10.5px;font-weight:700;color:#1e40af">Blocking works</div>
+          <div style="font-size:9.5px;color:#6b7280">Known-vulnerable test package correctly blocked</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:20px">🙂</div>
+          <div style="font-size:10.5px;font-weight:700;color:#1e40af">Dev friction</div>
+          <div style="font-size:9.5px;color:#6b7280">Pilot team says it doesn't slow them down</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 7: BUILD PLAN ===== -->
+  <div id="t7" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">BUILD PLAN — PHASED ROLLOUT</span></div>
+
+    <!-- Phase 1 -->
+    <div class="ly" style="border-color:#059669;margin-bottom:10px">
+      <span class="lt" style="color:#059669;font-size:11px">PHASE 1 — Registry POC, npm-only, one team (1 Week)</span>
+      <div style="padding:6px 10px;background:#ecfdf5;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#065f46">Goal: Prove the proxy-cache loop works, near-zero cost.</div>
+      </div>
+      <div class="sp" style="margin-top:0">
+        <div class="cd" style="border-top-color:#059669">
+          <div class="dt" style="color:#059669">Build</div>
+          <ul class="dl">
+            <li>Deploy Verdaccio via Docker on an internal server/VM</li>
+            <li>Configure npmjs.org uplink + storage volume</li>
+            <li>Shared auth token, pilot team .npmrc pointed at it</li>
+            <li>Confirm proxy + cache works for real installs</li>
+          </ul>
+        </div>
+        <div class="cd" style="border-top-color:#059669">
+          <div class="dt" style="color:#059669">Validate</div>
+          <ul class="dl">
+            <li>Pilot team's normal npm install/CI still works unchanged</li>
+            <li>Second install of same package served from cache, not upstream</li>
+            <li>No noticeable slowdown vs. hitting npmjs directly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="ly" style="border-color:#2563eb;margin-bottom:10px">
+      <span class="lt" style="color:#2563eb;font-size:11px">PHASE 2 — Trivy Scan Gate + Blocking (1-2 Weeks)</span>
+      <div style="padding:6px 10px;background:#dbeafe;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#1e40af">Goal: Vulnerable versions never reach a developer.</div>
+      </div>
+      <div class="sp" style="margin-top:0">
+        <div class="cd" style="border-top-color:#2563eb">
+          <div class="dt" style="color:#2563eb">Build</div>
+          <ul class="dl">
+            <li>Write scan-gate service implementing ScanProvider (Trivy)</li>
+            <li>Wire it into Verdaccio's on-fetch hook</li>
+            <li>policy.json with block-on Critical/High</li>
+            <li>Manual exception path (Slack message + config edit)</li>
+          </ul>
+        </div>
+        <div class="cd" style="border-top-color:#2563eb">
+          <div class="dt" style="color:#2563eb">Validate</div>
+          <ul class="dl">
+            <li>Install a known-CVE test package → confirm 403 block</li>
+            <li>Install its patched version → confirm it's allowed</li>
+            <li>Blocked-install error message is clear enough to self-serve</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="ly" style="border-color:#7c3aed;margin-bottom:10px">
+      <span class="lt" style="color:#7c3aed;font-size:11px">PHASE 3 — Nightly Rescan + Org-Wide Rollout (2-3 Weeks)</span>
+      <div style="padding:6px 10px;background:#f5f3ff;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#5b21b6">Goal: Every team on it, newly-disclosed CVEs caught retroactively.</div>
+      </div>
+      <div class="sp" style="margin-top:0">
+        <div class="cd" style="border-top-color:#7c3aed">
+          <div class="dt" style="color:#7c3aed">Build</div>
+          <ul class="dl">
+            <li>Nightly cron rescans all cached versions against fresh CVE feeds</li>
+            <li>Auto-quarantine + Slack alert on newly-flagged packages</li>
+            <li>Roll .npmrc config to remaining teams</li>
+            <li>Internal @company/* scope for publishing shared libs</li>
+          </ul>
+        </div>
+        <div class="cd" style="border-top-color:#7c3aed">
+          <div class="dt" style="color:#7c3aed">Validate</div>
+          <ul class="dl">
+            <li>All teams installing exclusively through internal registry</li>
+            <li>Rescan job correctly catches a simulated new CVE disclosure</li>
+            <li>No team reports being blocked without a clear resolution path</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="ly" style="border-color:#f59e0b;margin-bottom:10px">
+      <span class="lt" style="color:#f59e0b;font-size:11px">PHASE 4 — Multi-Ecosystem + Hardening (Ongoing)</span>
+      <div style="padding:6px 10px;background:#fffbeb;border-radius:6px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#92400e">Goal: Same guarantee for Python, Docker; tighten access control.</div>
+      </div>
+      <div class="sp" style="margin-top:0">
+        <div class="cd" style="border-top-color:#f59e0b">
+          <div class="dt" style="color:#f59e0b">Build</div>
+          <ul class="dl">
+            <li>Migrate to Nexus OSS (or add) for PyPI + Docker proxying</li>
+            <li>Same ScanProvider interface, add Grype for image scanning</li>
+            <li>SSO/LDAP auth, per-team scoped namespaces</li>
+            <li>Self-service exception request UI (small internal app)</li>
+          </ul>
+        </div>
+        <div class="cd" style="border-top-color:#f59e0b">
+          <div class="dt" style="color:#f59e0b">Scale</div>
+          <ul class="dl">
+            <li>License-compliance policy layer (block GPL/AGPL if required)</li>
+            <li>CI pipeline gate: builds fail on undeclared new vulnerable deps</li>
+            <li>Dashboard: org-wide usage, top offending packages, audit trail</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="db">
+      <div class="dt" style="color:#2563eb">Timeline + Dependencies</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <div style="background:#ecfdf5;border:2px solid #059669;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#059669;text-align:center">P1: POC<br><span style="font-weight:500;font-size:9px">1 week</span></div>
+        <span style="color:#9ca3af;font-size:14px">&rarr;</span>
+        <div style="background:#dbeafe;border:2px solid #2563eb;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#2563eb;text-align:center">P2: Scan Gate<br><span style="font-weight:500;font-size:9px">1-2 weeks</span></div>
+        <span style="color:#9ca3af;font-size:14px">&rarr;</span>
+        <div style="background:#f5f3ff;border:2px solid #7c3aed;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#7c3aed;text-align:center">P3: Rollout<br><span style="font-weight:500;font-size:9px">2-3 weeks</span></div>
+        <span style="color:#9ca3af;font-size:14px">&rarr;</span>
+        <div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:700;color:#f59e0b;text-align:center">P4: Multi-Ecosystem<br><span style="font-weight:500;font-size:9px">Ongoing</span></div>
+      </div>
+      <div style="font-size:10px;color:#6b7280;margin-top:8px;line-height:1.6">
+        <strong>Key insight:</strong> Phase 1 POC is intentionally simple — Verdaccio, npm only, no scanning yet. This proves the proxy-cache path works in about a week with zero licensing cost. The scan gate in Phase 2 is additive — the ScanProvider interface means swapping Trivy for OSV-Scanner or adding license checks later requires <strong>zero changes</strong> to the registry shell, just a new scanner module and a policy update.
+        <br><br>
+        <strong>Total to org-wide npm coverage with CVE blocking: ~4-6 weeks.</strong> Total to a working internal registry demo: <strong>~1 week.</strong>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(n){for(var i=0;i<8;i++){document.getElementById('t'+i).classList.add('hid');document.querySelectorAll('.tab')[i].classList.remove('on')}document.getElementById('t'+n).classList.remove('hid');document.querySelectorAll('.tab')[n].classList.add('on')}
+</script>
+</body>
+</html>
