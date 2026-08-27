@@ -1,0 +1,39 @@
+<%- include('_layout_top') %>
+
+<div class="card" style="margin-bottom:20px;">
+  <h3 style="margin-top:0;font-size:15px;">Block a domain</h3>
+  <p style="font-size:12px;color:#6b7280;">Enforced by the DNS sinkhole (<code>npm run dns-filter</code>), a separate process from this admin console. A Mac has to have its DNS server pointed at that process for this to have any effect — adding a domain here does nothing on its own until a machine is actually using it for DNS.</p>
+  <form class="upload" method="post" action="/admin/domains">
+    <label>Domain</label>
+    <input type="text" name="domain" placeholder="example.com" required>
+
+    <label>Reason</label>
+    <input type="text" name="reason" placeholder="Why this is blocked">
+
+    <div style="margin-top:16px;">
+      <button class="btn primary" type="submit">Block domain</button>
+    </div>
+  </form>
+</div>
+
+<h3 style="font-size:15px;margin-top:0;">Blocked domains</h3>
+<table>
+  <tr><th>Domain</th><th>Reason</th><th>Added</th><th></th></tr>
+  <% if (domains.length === 0) { %>
+    <tr><td colspan="4" style="color:#9ca3af;">Nothing blocked.</td></tr>
+  <% } %>
+  <% domains.forEach(function(d) { %>
+    <tr>
+      <td style="font-family:monospace;font-size:12px;"><%= d.domain %></td>
+      <td><%= d.reason %></td>
+      <td><%= d.created_at %></td>
+      <td>
+        <form method="post" action="/admin/domains/<%= d.id %>/remove" style="display:inline;">
+          <button class="btn revoke" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</table>
+
+<%- include('_layout_bottom') %>

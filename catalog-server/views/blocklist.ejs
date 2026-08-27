@@ -1,0 +1,39 @@
+<%- include('_layout_top') %>
+
+<div class="card" style="margin-bottom:20px;">
+  <h3 style="margin-top:0;font-size:15px;">Block a specific binary</h3>
+  <p style="font-size:12px;color:#6b7280;">For a specific bad hash — a malicious or otherwise unwanted binary — not the everyday enforcement mechanism. Everything not explicitly approved in the catalog is already denied by default; this is a narrow exception on top of that.</p>
+  <form class="upload" method="post" action="/admin/blocklist">
+    <label>SHA-256</label>
+    <input type="text" name="sha256" placeholder="64-character hex hash of the binary" required pattern="[0-9a-fA-F]{64}">
+
+    <label>Reason</label>
+    <input type="text" name="reason" placeholder="Why this is blocked">
+
+    <div style="margin-top:16px;">
+      <button class="btn primary" type="submit">Block hash</button>
+    </div>
+  </form>
+</div>
+
+<h3 style="font-size:15px;margin-top:0;">Blocked hashes</h3>
+<table>
+  <tr><th>SHA-256</th><th>Reason</th><th>Added</th><th></th></tr>
+  <% if (blocked.length === 0) { %>
+    <tr><td colspan="4" style="color:#9ca3af;">Nothing explicitly blocked.</td></tr>
+  <% } %>
+  <% blocked.forEach(function(b) { %>
+    <tr>
+      <td style="font-family:monospace;font-size:10px;color:#6b7280;"><%= b.sha256 %></td>
+      <td><%= b.reason %></td>
+      <td><%= b.created_at %></td>
+      <td>
+        <form method="post" action="/admin/blocklist/<%= b.id %>/remove" style="display:inline;">
+          <button class="btn revoke" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</table>
+
+<%- include('_layout_bottom') %>
