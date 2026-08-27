@@ -7,11 +7,22 @@ const multipart = require('@fastify/multipart');
 const formbody = require('@fastify/formbody');
 const ejs = require('ejs');
 const db = require('./db');
+const { isWhitelisted } = require('./ip-whitelist');
 
 const PORT = process.env.PORT || 3000;
+// Local-only by default — nothing on the LAN can reach this at all, which is
+// tighter than the /admin IP whitelist alone (that still left /api/* open to
+// anyone on the network). Real deployment sets HOST=0.0.0.0 and puts nginx +
+// TLS in front, per the plan; until then this should never be more open than
+// this one machine.
+const HOST = process.env.HOST || '127.0.0.1';
 const STORAGE_DIR = path.join(__dirname, '..', 'storage', 'packages');
 
-const app = Fastify({ logger: true });
+// trustProxy so req.ip reflects X-Forwarded-For from the nginx reverse proxy
+// in front of this server (per the plan's Tech Stack tab) — without it every
+// request would appear to come from nginx's own loopback address, and the
+// admin whitelist below would be checking the wrong IP entirely.
+const app = Fastify({ logger: true, trustProxy: true });
 
 app.register(view, {
   engine: { ejs },
@@ -24,6 +35,31 @@ app.register(formbody);
 app.register(multipart, {
   limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB, installers can be large
 });
+
+// This process itself only ever speaks plain HTTP (see the plan: TLS is
+// terminated at nginx in front of this app, not here). When FORCE_HTTPS is
+// set, every request that didn't arrive over TLS is blocked outright —
+// "someone opens the http:// URL" gets a hard 403, not a redirect, so it
+// fails the same way for a browser tab, curl, and the client app.
+//
+// nginx marks a request that reached it over TLS with X-Forwarded-Proto:
+// https before forwarding it here; a request nginx received as plain http,
+// or anyone hitting this port directly, arrives without that header (or
+// with it set to "http") and gets blocked. Off by default so local dev
+// without an nginx/cert in front of it still works.
+if (process.env.FORCE_HTTPS === '1') {
+  app.addHook('onRequest', async (req, reply) => {
+    if (req.headers['x-forwarded-proto'] === 'https') return;
+    app.log.warn(`blocked plain-http request to ${req.raw.url}`);
+    reply.code(403).send('Forbidden: HTTPS required.');
+  });
+}
+
+// ---------- Santa sync protocol (Phase 2: enforcement) ----------
+// This IS the wiring described in the plan's Phase 2 task "Wire admin-console
+// approvals to Santa rules" — approving a package here makes it show up in
+// ruledownload for every Mac that syncs against this server.
+app.register(require('./santa-sync'));
 
 // ---------- Client-facing API (macOS client app talks to these) ----------
 
@@ -80,9 +116,16 @@ app.post('/api/install-events', async (req, reply) => {
 });
 
 // ---------- Admin console (server-rendered, no framework needed) ----------
-// NOTE: no auth wired up yet — this is a local dev scaffold. Before this
-// touches even the 5-10 pilot machines, put this behind basic auth /
-// the office network / a VPN, same as the plan's Phase 1 assumes.
+// Blocked by default for anything not on ADMIN_IP_WHITELIST (see
+// ip-whitelist.js) — the "office network / VPN" option from the plan's
+// Phase 1 notes. Set ADMIN_IP_WHITELIST to the office's public IP or VPN
+// CIDR before pointing this at real pilot machines.
+app.addHook('onRequest', async (req, reply) => {
+  if (!req.raw.url.startsWith('/admin')) return;
+  if (isWhitelisted(req.ip)) return;
+  app.log.warn(`blocked admin access from ${req.ip}`);
+  reply.code(403).send('Forbidden: this IP is not whitelisted for admin access.');
+});
 
 app.get('/admin', async (_req, reply) => {
   const counts = {
@@ -168,7 +211,77 @@ app.get('/admin/devices', async (_req, reply) => {
   return reply.view('devices.ejs', { devices });
 });
 
-app.listen({ port: PORT, host: '0.0.0.0' }, (err, address) => {
+app.get('/admin/santa', async (_req, reply) => {
+  const santaDevices = db.prepare(`SELECT * FROM santa_devices ORDER BY last_seen DESC`).all();
+  const santaEvents = db.prepare(`SELECT * FROM santa_events ORDER BY created_at DESC LIMIT 50`).all();
+  return reply.view('santa.ejs', { santaDevices, santaEvents });
+});
+
+app.get('/admin/blocklist', async (_req, reply) => {
+  const blocked = db.prepare(`SELECT * FROM blocked_hashes ORDER BY created_at DESC`).all();
+  return reply.view('blocklist.ejs', { blocked });
+});
+
+app.post('/admin/blocklist', async (req, reply) => {
+  const { sha256, reason } = req.body || {};
+  const normalized = (sha256 || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(normalized)) {
+    return reply.code(400).send({ error: 'sha256 must be a 64-character hex string' });
+  }
+  db.prepare(
+    `INSERT INTO blocked_hashes (sha256, reason) VALUES (?, ?)
+     ON CONFLICT(sha256) DO UPDATE SET reason = excluded.reason`
+  ).run(normalized, reason || '');
+  return reply.redirect('/admin/blocklist');
+});
+
+app.post('/admin/blocklist/:id/remove', async (req, reply) => {
+  db.prepare(`DELETE FROM blocked_hashes WHERE id = ?`).run(req.params.id);
+  return reply.redirect('/admin/blocklist');
+});
+
+app.get('/admin/domains', async (_req, reply) => {
+  const domains = db.prepare(`SELECT * FROM blocked_domains ORDER BY created_at DESC`).all();
+  return reply.view('domains.ejs', { domains });
+});
+
+const DOMAIN_RE = /^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/;
+
+// People will naturally paste a full URL copied from their browser's address
+// bar to block it (https://snipki.de, https://snipki.de/some/path) — pull
+// the hostname out of that instead of making them strip it by hand.
+function extractHostname(input) {
+  const trimmed = (input || '').trim();
+  try {
+    return new URL(trimmed).hostname.toLowerCase();
+  } catch {
+    try {
+      return new URL(`http://${trimmed}`).hostname.toLowerCase();
+    } catch {
+      return trimmed.toLowerCase();
+    }
+  }
+}
+
+app.post('/admin/domains', async (req, reply) => {
+  const { domain, reason } = req.body || {};
+  const normalized = extractHostname(domain).replace(/\.$/, '');
+  if (!DOMAIN_RE.test(normalized)) {
+    return reply.code(400).send({ error: 'not a valid domain name' });
+  }
+  db.prepare(
+    `INSERT INTO blocked_domains (domain, reason) VALUES (?, ?)
+     ON CONFLICT(domain) DO UPDATE SET reason = excluded.reason`
+  ).run(normalized, reason || '');
+  return reply.redirect('/admin/domains');
+});
+
+app.post('/admin/domains/:id/remove', async (req, reply) => {
+  db.prepare(`DELETE FROM blocked_domains WHERE id = ?`).run(req.params.id);
+  return reply.redirect('/admin/domains');
+});
+
+app.listen({ port: PORT, host: HOST }, (err, address) => {
   if (err) {
     app.log.error(err);
     process.exit(1);

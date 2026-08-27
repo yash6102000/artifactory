@@ -55,6 +55,10 @@
   table.cmp th{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb}
   table.cmp td{font-size:10.5px;color:#334155;padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
   table.cmp tr:last-child td{border-bottom:none}
+  .stp{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:.3px;white-space:nowrap}
+  .stp-done{background:#ecfdf5;color:#059669}
+  .stp-partial{background:#fffbeb;color:#b45309}
+  .stp-todo{background:#f1f5f9;color:#64748b}
 </style>
 </head>
 <body>
@@ -154,6 +158,11 @@
       <div class="cx" style="color:#064e3b">Everything employee-facing and everything IT-facing is ours. The one piece that runs on every process launch on every machine, with zero tolerance for bugs, is Santa — not because we can't write code, but because reusing years of production hardening there is the responsible call.</div>
     </div>
 
+    <div class="why" style="margin-bottom:14px">
+      <div class="why-t">🔄 Considered switching to Munki + Fleet on 2026-08-27, decided against it</div>
+      <div class="why-d">Evaluated replacing the custom catalog/client/install-helper with <strong>Munki</strong> and config delivery with <strong>Fleet</strong>. Reverted: Fleet's real value (profile delivery) needs actual Apple MDM infrastructure — an Apple Push Notification certificate, realistically Apple Business Manager enrollment — that doesn't exist and isn't being pursued right now, so it wouldn't have unlocked anything today. Without Fleet, adopting Munki alone wasn't worth a mid-flight rewrite. Staying on the custom-built stack below, which is already working and tested. <strong>Pi-hole</strong> (self-hosted DNS sinkhole, no MDM dependency) remains a separate, proven option for domain blocking specifically — see the Build Plan tab.</div>
+    </div>
+
     <table class="cmp">
       <tr><th>Component</th><th>What it does</th><th>Built by</th></tr>
       <tr><td><strong>Catalog backend</strong></td><td>Stores approved installers + metadata (name, version, icon, category), serves the catalog to clients via an API</td><td>Us</td></tr>
@@ -243,19 +252,33 @@
       <div class="cx" style="color:#1e3a5f">Infra assumption: one small self-hosted server (or a single small EC2 instance if hosted on AWS) for our catalog backend + Santa's rule server.</div>
     </div>
 
+    <div class="ok" style="margin-bottom:14px">
+      <div class="ok-t">✅ Built beyond this plan's original task list (updated 2026-08-27)</div>
+      <div class="ok-d">Two admin-console features not in the original scope, both verified working end to end against a real browser: a <strong>hash blocklist</strong> (<code>/admin/blocklist</code>) that pushes explicit Santa <code>BLOCKLIST</code> rules for a specific bad binary that was never one of our own packages, and a <strong>domain blocklist + DNS sinkhole</strong> (<code>/admin/domains</code> + a standalone <code>dns-filter-server.js</code>) that returns NXDOMAIN for any blocked domain and its subdomains — tested by actually pointing a Mac's DNS at it and confirming a blocked site fails to load in Safari while everything else keeps working. Also evaluated <a href="https://pi-hole.net" target="_blank" rel="noopener">Pi-hole</a> (mature OSS DNS sinkhole) as a stronger long-term replacement for the hand-built version — got it running self-hosted via Docker/Colima and confirmed it blocks correctly too, not yet swapped in as the default.</div>
+    </div>
+
     <div class="ly" style="border-color:#059669;margin-bottom:10px">
       <span class="lt" style="color:#059669;font-size:11px">PHASE 1 — Catalog + Client App Live (4-6 Weeks)</span>
       <div style="padding:6px 10px;background:#ecfdf5;border-radius:6px;margin-bottom:8px">
         <div style="font-size:11px;font-weight:700;color:#065f46">Goal: employees install real approved apps through our own app, no enforcement yet.</div>
       </div>
       <table class="cmp">
-        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
-        <tr><td>Stand up the server</td><td>One small VM (or EC2 <code>t3.small</code>), reverse proxy + free TLS cert in front</td><td><code>https://software.internal.company.com</code> resolves with a valid cert</td></tr>
-        <tr><td>Build the catalog backend + admin console</td><td>DB, object storage, upload/approve flow for IT</td><td>IT can upload a package and see it appear in the catalog API</td></tr>
-        <tr><td>Build the client app</td><td>SwiftUI app listing catalog apps, with an install button</td><td>Pilot Macs can browse and see the top 10 requested tools</td></tr>
-        <tr><td>Build the privileged install helper</td><td>Signed helper process handles the actual install, verified against package checksum</td><td>Docker, Slack, Zoom etc. install correctly via the client app</td></tr>
-        <tr><td>Bootstrap distribution</td><td>One-time manual install of the client app on pilot Macs</td><td>8-10 pilot Macs have the client app installed and working</td></tr>
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th><th>Status</th></tr>
+        <tr><td>Stand up the server</td><td>One small VM (or EC2 <code>t3.small</code>), reverse proxy + free TLS cert in front</td><td><code>https://software.internal.company.com</code> resolves with a valid cert</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
+        <tr><td>Build the catalog backend + admin console</td><td>DB, object storage, upload/approve flow for IT</td><td>IT can upload a package and see it appear in the catalog API</td><td><span class="stp stp-done">✅ DONE</span></td></tr>
+        <tr><td>Build the client app</td><td>SwiftUI app listing catalog apps, with an install button</td><td>Pilot Macs can browse and see the top 10 requested tools</td><td><span class="stp stp-partial">🟡 PARTIAL</span></td></tr>
+        <tr><td>Build the privileged install helper</td><td>Signed helper process handles the actual install, verified against package checksum</td><td>Docker, Slack, Zoom etc. install correctly via the client app</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
+        <tr><td>Bootstrap distribution</td><td>One-time manual install of the client app on pilot Macs</td><td>8-10 pilot Macs have the client app installed and working</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
       </table>
+      <div class="db" style="margin-top:8px">
+        <div class="dt" style="color:#059669">📋 Actual status detail (updated 2026-08-27)</div>
+        <ul class="dl">
+          <li><strong>Catalog backend + admin console</strong> — built and verified live: upload → pending → approve → appears in <code>/api/catalog</code> → download byte-matches the upload's sha256 → revoke removes it. Also added beyond the original task list: an IP whitelist gating <code>/admin</code> (default-deny, only <code>127.0.0.1</code> allowed unless configured), a <code>FORCE_HTTPS</code> gate for when this sits behind real TLS, and the server binds to <code>127.0.0.1</code>-only by default so it's never more exposed than intended before real deployment.</li>
+          <li><strong>Client app</strong> — the browse/list half works and is verified (builds, runs, lists the catalog, checks in). The install half is an intentional manual stand-in (downloads the file and opens it via Finder, prompting for admin credentials) — not the automated privileged path, which needs the helper below.</li>
+          <li><strong>Privileged install helper</strong> — still a stub. Blocked on needing a real Apple Developer ID for <code>SMAppService</code>/<code>SMJobBless</code>. Evaluated an OSS alternative that avoids that requirement entirely: a one-time-installed root <code>LaunchDaemon</code> (the pattern the open-source tool <a href="https://www.munki.org/munki/" target="_blank" rel="noopener">Munki</a> already uses) — not yet implemented.</li>
+          <li><strong>Stand up the server / bootstrap distribution</strong> — genuinely untouched; needs real hosting and physical/remote access to pilot Macs, outside what could be done in this session.</li>
+        </ul>
+      </div>
     </div>
 
     <div class="ly" style="border-color:#2563eb;margin-bottom:10px">
@@ -264,12 +287,20 @@
         <div style="font-size:11px;font-weight:700;color:#1e40af">Goal: on the pilot group, nothing installs or runs unless our catalog approved it.</div>
       </div>
       <table class="cmp">
-        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
-        <tr><td>Deploy Santa (Monitor mode)</td><td>Install on pilot Macs via a Configuration Profile, <code>ClientMode = 1</code>, for a few days</td><td>Pilot Macs show exec events in the log, zero unexplained blocks</td></tr>
-        <tr><td>Wire admin-console approvals to Santa rules</td><td>Each catalog approval in our admin console pushes a matching Santa certificate/hash rule</td><td>A new catalog approval reaches pilot Macs' Santa rule set within minutes</td></tr>
-        <tr><td>Enable compiler rules</td><td><code>EnableTransitiveRules = true</code>; add <code>ALLOWLIST_COMPILER</code> rules for Xcode's linker, Go, and Homebrew's own binary</td><td>A local <code>go build</code> and a source-built brew formula both run without a block</td></tr>
-        <tr><td>Flip pilot to Lockdown</td><td><code>ClientMode = 2</code> pushed to the pilot group; block dialog points to our catalog app</td><td>A real unsigned test binary is blocked with the correct dialog, catalog apps still run fine</td></tr>
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th><th>Status</th></tr>
+        <tr><td>Deploy Santa (Monitor mode)</td><td>Install on pilot Macs via a Configuration Profile, <code>ClientMode = 1</code>, for a few days</td><td>Pilot Macs show exec events in the log, zero unexplained blocks</td><td><span class="stp stp-partial">🟡 PARTIAL</span></td></tr>
+        <tr><td>Wire admin-console approvals to Santa rules</td><td>Each catalog approval in our admin console pushes a matching Santa certificate/hash rule</td><td>A new catalog approval reaches pilot Macs' Santa rule set within minutes</td><td><span class="stp stp-done">✅ DONE</span></td></tr>
+        <tr><td>Enable compiler rules</td><td><code>EnableTransitiveRules = true</code>; add <code>ALLOWLIST_COMPILER</code> rules for Xcode's linker, Go, and Homebrew's own binary</td><td>A local <code>go build</code> and a source-built brew formula both run without a block</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
+        <tr><td>Flip pilot to Lockdown</td><td><code>ClientMode = 2</code> pushed to the pilot group; block dialog points to our catalog app</td><td>A real unsigned test binary is blocked with the correct dialog, catalog apps still run fine</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
       </table>
+      <div class="db" style="margin-top:8px">
+        <div class="dt" style="color:#059669">📋 Actual status detail (updated 2026-08-27)</div>
+        <ul class="dl">
+          <li><strong>Wire admin-console approvals to Santa rules</strong> — this is the most solidly finished piece of Phase 2. Implemented all four real sync-protocol stages (<code>preflight</code>/<code>eventupload</code>/<code>ruledownload</code>/<code>postflight</code>), verified against Santa's actual documented field names rather than guessed. Tested live end to end: approve a package → <code>ALLOWLIST</code> rule appears; revoke it → correctly emits <code>REMOVE</code> (not just silence — a naive first pass would've missed this, since Santa only reconciles on explicit <code>REMOVE</code>, not on absence). Also added, beyond the original task: an admin page to explicitly <code>BLOCKLIST</code> a specific bad hash that was never one of our own packages.</li>
+          <li><strong>Deploy Santa (Monitor mode)</strong> — installed via Homebrew on one machine, but intentionally left inert: the macOS system-extension approval was never completed, and further Santa testing was deliberately deferred to a disposable VM rather than risk Lockdown mode on a real daily-use laptop.</li>
+          <li><strong>Compiler rules / Flip to Lockdown</strong> — untouched; both depend on Monitor mode actually running first.</li>
+        </ul>
+      </div>
     </div>
 
     <div class="ly" style="border-color:#7c3aed;margin-bottom:10px">
@@ -278,10 +309,10 @@
         <div style="font-size:11px;font-weight:700;color:#5b21b6">Goal: the same enforcement the pilot already has, on every Mac in the company.</div>
       </div>
       <table class="cmp">
-        <tr><th>Task</th><th>Owner action</th><th>Done when</th></tr>
-        <tr><td>Stand up the exception path</td><td>A dedicated Slack channel + documented review step (check the real signing cert, not just the request text), resolved through our admin console</td><td>One real request handled end-to-end same day, rule + catalog entry added together</td></tr>
-        <tr><td>Roll to the next team</td><td>Same client app + Santa bootstrap — Engineering, then everyone else, one team at a time</td><td>Every company Mac reports Lockdown mode active</td></tr>
-        <tr><td>Announce company-wide</td><td>Short internal doc/Slack post: "install things here from now on, here's why"</td><td>Real installs happen via our catalog org-wide, unprompted</td></tr>
+        <tr><th>Task</th><th>Owner action</th><th>Done when</th><th>Status</th></tr>
+        <tr><td>Stand up the exception path</td><td>A dedicated Slack channel + documented review step (check the real signing cert, not just the request text), resolved through our admin console</td><td>One real request handled end-to-end same day, rule + catalog entry added together</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
+        <tr><td>Roll to the next team</td><td>Same client app + Santa bootstrap — Engineering, then everyone else, one team at a time</td><td>Every company Mac reports Lockdown mode active</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
+        <tr><td>Announce company-wide</td><td>Short internal doc/Slack post: "install things here from now on, here's why"</td><td>Real installs happen via our catalog org-wide, unprompted</td><td><span class="stp stp-todo">⬜ NOT STARTED</span></td></tr>
       </table>
       <div class="why" style="margin-top:8px">
         <div class="why-t">⚠️ Rollback plan if something breaks</div>

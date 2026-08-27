@@ -7,15 +7,20 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "dns-filter": "node src/dns-filter-server.js"
   },
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
     "@fastify/multipart": "^8.3.0",
     "@fastify/static": "^7.0.4",
     "@fastify/view": "^9.1.0",
-    "better-sqlite3": "^11.3.0",
+    "better-sqlite3": "^13.0.3",
+    "dns2": "^3.1.1",
     "ejs": "^3.1.10",
     "fastify": "^4.28.1"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true
   }
 }
