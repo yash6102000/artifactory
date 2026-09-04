@@ -5,6 +5,7 @@ const Fastify = require('fastify');
 const view = require('@fastify/view');
 const multipart = require('@fastify/multipart');
 const formbody = require('@fastify/formbody');
+const compress = require('@fastify/compress');
 const ejs = require('ejs');
 const db = require('./db');
 const { isWhitelisted } = require('./ip-whitelist');
@@ -28,6 +29,11 @@ app.register(view, {
   engine: { ejs },
   root: path.join(__dirname, '..', 'views'),
 });
+// Real Santa clients gzip-compress their sync request bodies. Without this,
+// Fastify's own content-length check chokes on the compressed byte count
+// against the declared header, failing every /preflight, /eventupload, etc.
+// with FST_ERR_CTP_INVALID_CONTENT_LENGTH before our route code ever runs.
+app.register(compress);
 // Plain HTML forms (Approve/Revoke buttons) POST as
 // application/x-www-form-urlencoded — Fastify has no parser for that
 // registered by default, which is exactly the 415 error this fixes.

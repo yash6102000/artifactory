@@ -11,6 +11,7 @@
     "dns-filter": "node src/dns-filter-server.js"
   },
   "dependencies": {
+    "@fastify/compress": "^7.0.3",
     "@fastify/formbody": "^7.4.0",
     "@fastify/multipart": "^8.3.0",
     "@fastify/static": "^7.0.4",
