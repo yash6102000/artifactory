@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software Center — Tool Options (Not Yet Finalized)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#f5f6f8;color:#1a1a2e;padding:24px 16px}
+  .pg{max-width:1140px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin-bottom:2px}
+  .sub{font-size:11px;color:#6b7280;margin-bottom:18px}
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:#e5e7eb;border-radius:10px;padding:3px;flex-wrap:wrap;width:fit-content}
+  .tab{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:0;color:#6b7280;transition:all .15s}
+  .tab.on{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .tab:hover{color:#1a1a2e}
+  .pn{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+  .hid{display:none}
+  .st{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:12px}
+  .co{padding:12px 14px;border-radius:9px;border:1px solid}
+  .ct{font-weight:700;font-size:11.5px;margin-bottom:3px}
+  .cx{font-size:11px;line-height:1.6}
+  .sp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .s3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .cd{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:12px 14px;border-top:3px solid}
+  .dt{font-size:10.5px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .dl{list-style:none;padding:0}
+  .dl li{font-size:10.5px;color:#475569;padding:2px 0 2px 13px;position:relative;line-height:1.5}
+  .dl li::before{content:"\2192";position:absolute;left:0;color:#94a3b8;font-size:9px}
+  code{background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:10px;font-family:monospace}
+  table.cmp{width:100%;border-collapse:collapse;margin-top:8px}
+  table.cmp th{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb}
+  table.cmp td{font-size:10.5px;color:#334155;padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  table.cmp tr:last-child td{border-bottom:none}
+  .why{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .why-t{font-size:10px;font-weight:700;color:#92400e}
+  .why-d{font-size:10px;color:#78350f;margin-top:2px}
+  .ok{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:8px 12px;margin-top:6px}
+  .ok-t{font-size:10px;font-weight:700;color:#065f46}
+  .ok-d{font-size:10px;color:#064e3b;margin-top:2px}
+  .rt{font-weight:800}
+  .r5{color:#059669}.r4{color:#0891b2}.r3{color:#b45309}.r2{color:#dc2626}.r1{color:#991b1b}
+  .pick{background:#ecfdf5;border-left:3px solid #059669}
+</style>
+</head>
+<body>
+<div class="pg">
+  <h1>🧭 Software Center — Tool Options, Not Yet Finalized</h1>
+  <p class="sub">Companion to <code>inhouse-software-center-plan.html</code> &bull; Lays out every tool still on the table per goal, rated, sourced, and costed &bull; Nothing here is decided yet — this is the shortlist, not the pick &bull; Updated 2026-09-02</p>
+
+  <div class="tabs" id="tabbar">
+    <button class="tab on" onclick="go(0)">Goals &amp; Status</button>
+    <button class="tab" onclick="go(1)">App Installs</button>
+    <button class="tab" onclick="go(2)">Website Filtering</button>
+    <button class="tab" onclick="go(3)">MDM / Enrollment</button>
+    <button class="tab" onclick="go(4)">Cost by Path</button>
+  </div>
+
+  <!-- ===== TAB 0: GOALS & STATUS ===== -->
+  <div id="t0" class="pn">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">THREE GOALS, MACOS ONLY, NONE OF THE TOOLING BELOW IS FINAL YET</span></div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">The three control points this project needs</div>
+      <div class="cx" style="color:#1e3a5f">
+        1. Which apps an employee can install (.pkg/.dmg)<br>
+        2. Which packages/libraries/CLI tools an employee can install (Homebrew, npm, pip, direct binaries)<br>
+        3. Which websites an employee can open
+      </div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Control point</th><th>Options still on the table</th><th>Decided?</th></tr>
+      <tr><td><strong>App installs</strong></td><td>Munki (OSS) vs. this repo's custom catalog-server + client</td><td>Not finalized</td></tr>
+      <tr><td><strong>CLI/package/library blocking</strong></td><td>Santa (North Pole Security fork) — blocks by path, hash, or signing cert, any layer</td><td class="rt r5">Decided — Santa, regardless of everything else</td></tr>
+      <tr><td><strong>Website filtering</strong></td><td>AdGuard Home vs. Pi-hole vs. custom on-device NetworkExtension agent</td><td>Not finalized</td></tr>
+      <tr><td><strong>Enrollment / enforcement delivery (MDM)</strong></td><td>No MDM (manual) vs. MicroMDM vs. NanoMDM vs. Fleet vs. Apple's own free Apple Business platform</td><td>Not finalized — infra (Apple Business Manager, APNs cert) does not exist yet</td></tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ Why MDM isn't automatically "out of the question"</div>
+      <div class="why-d">Apple's own MDM-side fees are close to $0/year (see the Cost tab) — the real blocker was never money, it's the setup effort: a D-U-N-S number, Apple's identity verification, and an annual certificate renewal that breaks all device management if missed. Worth knowing before ruling it out entirely.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 1: APP INSTALLS ===== -->
+  <div id="t1" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#ecfdf5;color:#059669">GOAL 1 — WHICH APPS AN EMPLOYEE CAN INSTALL</span></div>
+
+    <table class="cmp">
+      <tr><th>Option</th><th>What it is</th><th>Self-updates without MDM?</th><th>Admin UI</th><th>Effort right now</th><th>Rating</th></tr>
+      <tr>
+        <td><strong>Munki</strong><br><span style="font-size:9px;color:#6b7280"><a href="https://github.com/munki/munki" target="_blank" rel="noopener">github.com/munki/munki</a></span></td>
+        <td>Mature OSS catalog server + client, since 2010</td>
+        <td>Yes — client checks in on a timer, self-updates via its own catalog (documented practice)</td>
+        <td>None built-in — needs <code>munkiimport</code>/manifests by hand, or third-party MunkiWebAdmin</td>
+        <td>Learning curve on manifest/plist model; no App Store/VPP support at all</td>
+        <td class="rt r5">5 — most proven, largest community</td>
+      </tr>
+      <tr>
+        <td><strong>This repo's catalog-server + client</strong><br><span style="font-size:9px;color:#6b7280">custom, already in this repo</span></td>
+        <td>Custom Fastify + SQLite backend, admin console, SwiftUI client</td>
+        <td>Partly — upload/approve/download/checkin all verified working end to end, but client has no background auto-check-in timer yet, needs manual Refresh</td>
+        <td>Built and tested — packages, devices, blocklist, domains, Santa dashboard, all in one console</td>
+        <td>Already working; still needs a signed privileged install helper (stub today, prompts for password manually)</td>
+        <td class="rt r4">4 — solid foundation, two known gaps left</td>
+      </tr>
+    </table>
+
+    <div class="ok">
+      <div class="ok-t">✅ What favors staying custom</div>
+      <div class="ok-d">The catalog/approve/download/audit loop already passes real tests, per this repo's README. Munki would not add anything to that half — its real edge is the self-update loop and its huge install base.</div>
+    </div>
+    <div class="why">
+      <div class="why-t">⚠️ What favors Munki</div>
+      <div class="why-d">Community support, a documented root-<code>LaunchDaemon</code> pattern for privileged install (the exact gap this repo's helper still has), and a ready client UI (Managed Software Center) if the custom SwiftUI app's install UX needs less maintenance long-term.</div>
+    </div>
+
+    <div class="co pick" style="margin-top:10px">
+      <div class="ct" style="color:#065f46">Practical middle path</div>
+      <div class="cx">Borrow Munki's root-<code>LaunchDaemon</code> install pattern to finish this repo's privileged-install helper, and add a background check-in timer to the client — keep the already-tested admin console and Santa wiring as-is, instead of a full swap.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: WEBSITE FILTERING ===== -->
+  <div id="t2" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#f5f3ff;color:#7c3aed">GOAL 3 — WHICH WEBSITES AN EMPLOYEE CAN OPEN</span></div>
+
+    <table class="cmp">
+      <tr><th>Option</th><th>Mechanism</th><th>Works without MDM?</th><th>Bypassable how</th><th>Rating (no MDM)</th></tr>
+      <tr>
+        <td><strong>AdGuard Home</strong><br><span style="font-size:9px;color:#6b7280"><a href="https://github.com/AdguardTeam/AdGuardHome" target="_blank" rel="noopener">github.com/AdguardTeam/AdGuardHome</a></span></td>
+        <td>Self-hosted DNS block-list server, API-driven rule updates</td>
+        <td>Yes — pure DNS, no system extension needed</td>
+        <td>Employee changes their Mac's DNS server or uses a VPN, since nothing enforces the setting without MDM</td>
+        <td class="rt r4">4 — best practical pick without MDM</td>
+      </tr>
+      <tr>
+        <td><strong>Pi-hole</strong><br><span style="font-size:9px;color:#6b7280"><a href="https://pi-hole.net" target="_blank" rel="noopener">pi-hole.net</a></span></td>
+        <td>Same DNS sinkhole approach — already tried self-hosted via Docker/Colima per the main plan doc, confirmed working</td>
+        <td>Yes</td>
+        <td>Same DNS-bypass weakness as AdGuard Home</td>
+        <td class="rt r3">3 — proven, but less API-friendly for this repo's admin console than AdGuard Home</td>
+      </tr>
+      <tr>
+        <td><strong>Custom on-device filter agent</strong><br><code>NEDNSProxyProvider</code></td>
+        <td>NetworkExtension-based agent, checks every request on-device — survives network changes, hotel WiFi, captive portals</td>
+        <td>No, not fully — macOS requires an MDM-pushed profile to silently approve a system extension; without MDM the employee gets a permission prompt and can decline it</td>
+        <td>Employee declines the permission prompt, or disables/removes the extension (nothing stops that without MDM)</td>
+        <td class="rt r2">2 — strongest design, but its whole value depended on MDM enforcement</td>
+      </tr>
+      <tr>
+        <td><strong>Plain DNS pinning</strong> (System Settings)</td>
+        <td>Manually set DNS server in network settings</td>
+        <td>Yes</td>
+        <td>Breaks on its own — doesn't survive network changes or captive portals, already ruled out</td>
+        <td class="rt r1">1 — ruled out</td>
+      </tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ The honest trade-off, without MDM</div>
+      <div class="why-d">Without MDM, the strongest design (on-device filter agent) drops to weakest, because its edge was MDM-enforced non-removability. AdGuard Home becomes the practical pick — accept that a technical employee can bypass it by changing DNS settings by hand, and treat that as a known, accepted gap rather than something solved today.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: MDM / ENROLLMENT ===== -->
+  <div id="t3" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#fffbeb;color:#92400e">DELIVERY LAYER — MDM, STILL OPEN</span></div>
+
+    <div class="co" style="background:#fffbeb;border-color:#fde68a;margin-bottom:14px">
+      <div class="ct" style="color:#92400e">What MDM would actually add, if adopted</div>
+      <div class="cx" style="color:#78350f">Zero-touch enrollment for new Macs, non-removable enforcement (an employee with admin rights can't just uninstall Santa or the filter agent), fleet-wide push of config/policy changes, and Mac App Store restriction — the one control point Munki and Santa cannot touch at all.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Option</th><th>Admin UI</th><th>Device visibility</th><th>Setup effort</th><th>Hosting</th><th>Rating for this repo's style</th></tr>
+      <tr>
+        <td><strong>No MDM (manual)</strong></td>
+        <td>—</td><td>—</td>
+        <td>Lowest — one-time manual install per Mac, same as today</td><td>$0 extra</td>
+        <td class="rt r3">3 — works at pilot scale, no non-removable enforcement</td>
+      </tr>
+      <tr>
+        <td><strong>MicroMDM</strong><br><span style="font-size:9px;color:#6b7280"><a href="https://github.com/micromdm/micromdm" target="_blank" rel="noopener">github.com/micromdm/micromdm</a></span></td>
+        <td>None — API/CLI only</td><td>None built-in</td>
+        <td>Build everything on top yourself; repo is quieter than it used to be</td><td>Lightweight, single Go binary</td>
+        <td class="rt r3">3 — barebones, matches this repo's build-it-yourself style, but less actively maintained than NanoMDM</td>
+      </tr>
+      <tr>
+        <td><strong>NanoMDM</strong><br><span style="font-size:9px;color:#6b7280">same author lineage as MicroMDM, actively maintained</span></td>
+        <td>None — API/CLI only</td><td>None built-in</td>
+        <td>Same barebones model, newer and more active</td><td>Even lighter than MicroMDM</td>
+        <td class="rt r4">4 — best fit if self-hosting: barebones, active, pairs with this repo's own admin console instead of replacing it</td>
+      </tr>
+      <tr>
+        <td><strong>Fleet</strong><br><span style="font-size:9px;color:#6b7280"><a href="https://github.com/fleetdm/fleet" target="_blank" rel="noopener">github.com/fleetdm/fleet</a></span></td>
+        <td>Full web UI</td><td>Built-in osquery compliance/status</td>
+        <td>Fastest to a working console, own opinions and own UI</td><td>Needs MySQL + Redis — heavier, ~$40-60/mo extra per the AWS rollout doc</td>
+        <td class="rt r3">3 — best visibility, but overlaps with the admin console this repo already built</td>
+      </tr>
+      <tr>
+        <td><strong>Apple Business</strong> (Apple's own free platform, formerly Apple Business Manager + Apple Business Essentials, merged 2026-04-14)</td>
+        <td>Apple's own console</td><td>Apple's own device status view</td>
+        <td>D-U-N-S number + Apple identity verification required; zero-touch enrollment only for Macs bought through Apple/an authorized reseller/a carrier</td><td>$0 — Apple hosts it</td>
+        <td class="rt r5">5 — cheapest and least engineering effort, but does not replace Munki/Santa/AdGuard Home, only the enrollment+lock layer</td>
+      </tr>
+    </table>
+
+    <div class="why">
+      <div class="why-t">⚠️ What none of these give you for free</div>
+      <div class="why-d">Whichever MDM option is picked (including Apple's own), the catalog server (or Munki), Santa's sync server, and AdGuard Home/Pi-hole still need to be built and hosted separately — MDM only handles enrollment, profile push, non-removability, and App Store restriction, not app cataloging or binary blocking.</div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: COST BY PATH ===== -->
+  <div id="t4" class="pn hid">
+    <div style="text-align:center;margin-bottom:14px"><span class="st" style="background:#dbeafe;color:#1d4ed8">COST — EVERY PATH, SIDE BY SIDE</span></div>
+
+    <div class="co" style="background:#dbeafe;border-color:#93c5fd;margin-bottom:14px">
+      <div class="ct" style="color:#1e40af">Apple's own MDM-side fee is nearly flat, regardless of which path is picked</div>
+      <div class="cx" style="color:#1e3a5f">Apple Developer Program: <strong>$99/year</strong>, one account for the whole company, needed for code signing/notarization either way. Apple Business enrollment and the APNs push certificate are both <strong>free</strong>. What actually swings the total is hosting — and whether installer files get stored on our own server at all.</div>
+    </div>
+
+    <table class="cmp">
+      <tr><th>Path</th><th>Apple-side cost /yr</th><th>Hosting /yr</th><th>Total /yr (≈70 devices)</th><th>What's gained</th></tr>
+      <tr>
+        <td><strong>A — No MDM, lean single EC2, pass-through installer downloads</strong></td>
+        <td>$99</td>
+        <td>~$335-405 (one EC2 running Postgres+Redis+Fleet/Munki+Pi-hole in Docker, no ALB/RDS/ElastiCache/Fargate/2nd EC2, no stored .pkg files — client verifies SHA256 against vendor download)</td>
+        <td class="rt r5">~$434-504</td>
+        <td>Cheapest, fastest to ship, no non-removable enforcement</td>
+      </tr>
+      <tr>
+        <td><strong>A2 — Same as A, but installer files stored on our own server</strong></td>
+        <td>$99</td>
+        <td>~$340-410 (adds a slightly larger EBS volume + real outbound data transfer for large .pkg downloads)</td>
+        <td class="rt r4">~$439-509</td>
+        <td>Same as A, plus no dependency on vendor URLs staying stable per version</td>
+      </tr>
+      <tr>
+        <td><strong>B — Self-hosted MDM (NanoMDM/MicroMDM/Fleet) added on top of A</strong></td>
+        <td>$99</td>
+        <td>~$400-500+ (adds hosting/engineering for the MDM server itself)</td>
+        <td class="rt r3">~$499-599+</td>
+        <td>Non-removable enforcement, zero-touch enrollment, App Store restriction — but the team builds and owns the MDM layer</td>
+      </tr>
+      <tr>
+        <td><strong>C — Apple Business (Path B) for MDM, everything else same as A</strong></td>
+        <td>$99</td>
+        <td>~$335-405 (catalog/Munki + Santa sync + AdGuard Home only — Apple hosts the MDM layer itself)</td>
+        <td class="rt r4">~$434-504</td>
+        <td>Same non-removable enforcement + zero-touch enrollment + App Store restriction as Path B, without building or hosting an MDM server — catch: zero-touch only works for Macs bought through Apple/an authorized reseller</td>
+      </tr>
+    </table>
+
+    <div class="sp" style="margin-top:12px">
+      <div class="cd" style="border-top-color:#059669">
+        <div class="dt" style="color:#059669">💰 Cheapest to ship</div>
+        <ul class="dl">
+          <li>Path A or C — nearly identical dollar cost, ~$434-504/yr</li>
+          <li>Difference is engineering time and enforcement strength, not price</li>
+        </ul>
+      </div>
+      <div class="cd" style="border-top-color:#dc2626">
+        <div class="dt" style="color:#dc2626">📊 For context — what this replaces</div>
+        <ul class="dl">
+          <li>A paid MDM (Jamf/Kandji/Mosyle) runs ~$8-12/device/month — ~$500-720/month (~$6-8.6k/yr) at 60-70 devices</li>
+          <li>Every path above stays under $600/yr total, regardless of which options are picked</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">⚠️ Read this before picking a path on cost alone</div>
+      <div class="why-d">Path A/A2/C are all close in price. The real decision driver is enforcement strength (can an employee remove the tools?) and enrollment effort (manual per-Mac touch vs. zero-touch), not the dollar total — see the MDM tab for that trade-off.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(n){for(var i=0;i<5;i++){document.getElementById('t'+i).classList.add('hid');document.querySelectorAll('.tab')[i].classList.remove('on')}document.getElementById('t'+n).classList.remove('hid');document.querySelectorAll('.tab')[n].classList.add('on')}
+</script>
+</body>
+</html>
