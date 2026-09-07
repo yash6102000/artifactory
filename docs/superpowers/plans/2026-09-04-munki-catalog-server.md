@@ -1367,6 +1367,7 @@ const path = require('node:path');
 
 test('blocklist and domains admin routes work end to end', async () => {
   process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-bd-test-'));
+  process.env.PORT = '0'; // avoid EADDRINUSE if node:test runs files concurrently
   delete require.cache[require.resolve('../src/db')];
   delete require.cache[require.resolve('../src/munki-repo')];
   delete require.cache[require.resolve('../src/server')];
@@ -1569,6 +1570,7 @@ function buildTestPkg() {
 
 test('ruledownload emits ALLOWLIST for an approved package and REMOVE for a pending one', async () => {
   process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-santa-test-'));
+  process.env.PORT = '0'; // avoid EADDRINUSE if node:test runs files concurrently
   delete require.cache[require.resolve('../src/db')];
   delete require.cache[require.resolve('../src/munki-repo')];
   delete require.cache[require.resolve('../src/server')];
@@ -1751,6 +1753,7 @@ const path = require('node:path');
 
 test('device checkin and install events are recorded', async () => {
   process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-api-test-'));
+  process.env.PORT = '0'; // avoid EADDRINUSE if node:test runs files concurrently
   delete require.cache[require.resolve('../src/db')];
   delete require.cache[require.resolve('../src/munki-repo')];
   delete require.cache[require.resolve('../src/server')];
