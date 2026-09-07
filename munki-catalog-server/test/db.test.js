@@ -1,8 +1,6 @@
 // munki-catalog-server/test/db.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 
 test('db.js creates all expected tables', () => {
   delete require.cache[require.resolve('../src/db')];
