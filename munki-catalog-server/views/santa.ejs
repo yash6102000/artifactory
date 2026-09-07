@@ -1,0 +1,37 @@
+<%- include('_layout_top') %>
+
+<h3 style="margin-top:0;font-size:15px;">Santa-enrolled machines</h3>
+<table>
+  <tr><th>Machine ID</th><th>Hostname</th><th>Client mode reported</th><th>Santa version</th><th>Last sync</th></tr>
+  <% if (santaDevices.length === 0) { %>
+    <tr><td colspan="5" style="color:#9ca3af;">No Santa clients have synced yet.</td></tr>
+  <% } %>
+  <% santaDevices.forEach(function(d) { %>
+    <tr>
+      <td style="font-family:monospace;font-size:11px;"><%= d.machine_id %></td>
+      <td><%= d.hostname %></td>
+      <td><%= d.client_mode %></td>
+      <td><%= d.santa_version %></td>
+      <td><%= d.last_seen %></td>
+    </tr>
+  <% }) %>
+</table>
+
+<h3 style="font-size:15px;margin-top:24px;">Recent exec events</h3>
+<table>
+  <tr><th>Machine ID</th><th>Decision</th><th>File</th><th>User</th><th>When</th></tr>
+  <% if (santaEvents.length === 0) { %>
+    <tr><td colspan="5" style="color:#9ca3af;">No exec events reported yet.</td></tr>
+  <% } %>
+  <% santaEvents.forEach(function(e) { %>
+    <tr>
+      <td style="font-family:monospace;font-size:11px;"><%= e.machine_id %></td>
+      <td><%= e.decision %></td>
+      <td><%= e.file_path %><%= e.file_name ? '/' + e.file_name : '' %></td>
+      <td><%= e.executing_user %></td>
+      <td><%= e.created_at %></td>
+    </tr>
+  <% }) %>
+</table>
+
+<%- include('_layout_bottom') %>

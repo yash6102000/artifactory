@@ -26,6 +26,7 @@ app.register(formbody);
 app.register(multipart, {
   limits: { fileSize: 2 * 1024 * 1024 * 1024 },
 });
+app.register(require('./santa-sync'));
 
 if (process.env.FORCE_HTTPS === '1') {
   app.addHook('onRequest', async (req, reply) => {
@@ -175,6 +176,12 @@ app.post('/admin/blocklist', async (req, reply) => {
 app.post('/admin/blocklist/:id/remove', async (req, reply) => {
   db.prepare(`DELETE FROM blocked_hashes WHERE id = ?`).run(req.params.id);
   return reply.redirect('/admin/blocklist');
+});
+
+app.get('/admin/santa', async (_req, reply) => {
+  const santaDevices = db.prepare(`SELECT * FROM santa_devices ORDER BY last_seen DESC`).all();
+  const santaEvents = db.prepare(`SELECT * FROM santa_events ORDER BY created_at DESC LIMIT 50`).all();
+  return reply.view('santa.ejs', { santaDevices, santaEvents });
 });
 
 app.get('/admin/domains', async (_req, reply) => {
