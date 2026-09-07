@@ -1,0 +1,27 @@
+<%- include('_layout_top') %>
+
+<div class="stats">
+  <div class="stat"><div class="n"><%= counts.packages %></div><div class="l">Packages in repo</div></div>
+  <div class="stat"><div class="n"><%= counts.approved %></div><div class="l">Approved (visible to employees)</div></div>
+  <div class="stat"><div class="n"><%= counts.devices %></div><div class="l">Enrolled devices</div></div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:14px;">Recent install events</h3>
+  <table>
+    <tr><th>Device</th><th>Package</th><th>Status</th><th>When</th></tr>
+    <% if (recentEvents.length === 0) { %>
+      <tr><td colspan="4" style="color:#9ca3af;">No install events reported yet.</td></tr>
+    <% } %>
+    <% recentEvents.forEach(function(e) { %>
+      <tr>
+        <td><%= e.device_uuid %></td>
+        <td><%= e.package_name %></td>
+        <td><%= e.status %></td>
+        <td><%= e.created_at %></td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('_layout_bottom') %>

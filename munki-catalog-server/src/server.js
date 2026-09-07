@@ -136,6 +136,85 @@ app.post('/admin/packages/:id/revoke', async (req, reply) => {
   return reply.redirect('/admin/packages');
 });
 
+app.get('/admin', async (_req, reply) => {
+  const packages = munkiRepo.listPackages();
+  const counts = {
+    packages: packages.length,
+    approved: packages.filter((p) => p.approved).length,
+    devices: db.prepare(`SELECT COUNT(*) c FROM devices`).get().c,
+  };
+  const recentEvents = db
+    .prepare(`SELECT * FROM install_events ORDER BY created_at DESC LIMIT 20`)
+    .all();
+  return reply.view('dashboard.ejs', { counts, recentEvents });
+});
+
+app.get('/admin/devices', async (_req, reply) => {
+  const devices = db.prepare(`SELECT * FROM devices ORDER BY last_seen DESC`).all();
+  return reply.view('devices.ejs', { devices });
+});
+
+app.get('/admin/blocklist', async (_req, reply) => {
+  const blocked = db.prepare(`SELECT * FROM blocked_hashes ORDER BY created_at DESC`).all();
+  return reply.view('blocklist.ejs', { blocked });
+});
+
+app.post('/admin/blocklist', async (req, reply) => {
+  const { sha256, reason } = req.body || {};
+  const normalized = (sha256 || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(normalized)) {
+    return reply.code(400).send({ error: 'sha256 must be a 64-character hex string' });
+  }
+  db.prepare(
+    `INSERT INTO blocked_hashes (sha256, reason) VALUES (?, ?)
+     ON CONFLICT(sha256) DO UPDATE SET reason = excluded.reason`
+  ).run(normalized, reason || '');
+  return reply.redirect('/admin/blocklist');
+});
+
+app.post('/admin/blocklist/:id/remove', async (req, reply) => {
+  db.prepare(`DELETE FROM blocked_hashes WHERE id = ?`).run(req.params.id);
+  return reply.redirect('/admin/blocklist');
+});
+
+app.get('/admin/domains', async (_req, reply) => {
+  const domains = db.prepare(`SELECT * FROM blocked_domains ORDER BY created_at DESC`).all();
+  return reply.view('domains.ejs', { domains });
+});
+
+const DOMAIN_RE = /^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/;
+
+function extractHostname(input) {
+  const trimmed = (input || '').trim();
+  try {
+    return new URL(trimmed).hostname.toLowerCase();
+  } catch {
+    try {
+      return new URL(`http://${trimmed}`).hostname.toLowerCase();
+    } catch {
+      return trimmed.toLowerCase();
+    }
+  }
+}
+
+app.post('/admin/domains', async (req, reply) => {
+  const { domain, reason } = req.body || {};
+  const normalized = extractHostname(domain).replace(/\.$/, '');
+  if (!DOMAIN_RE.test(normalized)) {
+    return reply.code(400).send({ error: 'not a valid domain name' });
+  }
+  db.prepare(
+    `INSERT INTO blocked_domains (domain, reason) VALUES (?, ?)
+     ON CONFLICT(domain) DO UPDATE SET reason = excluded.reason`
+  ).run(normalized, reason || '');
+  return reply.redirect('/admin/domains');
+});
+
+app.post('/admin/domains/:id/remove', async (req, reply) => {
+  db.prepare(`DELETE FROM blocked_domains WHERE id = ?`).run(req.params.id);
+  return reply.redirect('/admin/domains');
+});
+
 app.listen({ port: PORT, host: HOST }, (err, address) => {
   if (err) {
     app.log.error(err);
