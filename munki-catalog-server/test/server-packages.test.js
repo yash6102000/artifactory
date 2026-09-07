@@ -63,3 +63,30 @@ test('POST /admin/packages (external mode) then approve shows it as approved', a
 
   await app.close();
 });
+
+test('POST /admin/packages (file mode, malformed .pkg) returns a clean 400 and cleans up the temp file', async () => {
+  process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-server-test-'));
+  process.env.PORT = '0';
+  delete require.cache[require.resolve('../src/db')];
+  delete require.cache[require.resolve('../src/munki-repo')];
+  delete require.cache[require.resolve('../src/server')];
+  const app = require('../src/server');
+  await app.ready();
+
+  const form = new FormData();
+  form.append('mode', 'file');
+  form.append('name', 'BrokenApp');
+  form.append('version', '1.0');
+  form.append('category', 'Testing');
+  form.append('file', new Blob(['this is not a real .pkg installer']), 'Broken-1.0.pkg');
+
+  const res = await app.inject({ method: 'POST', url: '/admin/packages', payload: form });
+
+  assert.equal(res.statusCode, 400);
+  const body = JSON.parse(res.body);
+  assert.equal(body.error, 'invalid package: could not import the uploaded file');
+  // no raw munkiimport/exec error text (stderr, stack, file paths) leaked to the client
+  assert.ok(!/pkgsinfo|munkiimport|Command failed|ENOENT|\/private\/tmp/i.test(res.body));
+
+  await app.close();
+});

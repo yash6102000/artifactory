@@ -104,16 +104,22 @@ app.post('/admin/packages', async (req, reply) => {
       if (tmpFilePath) fs.unlinkSync(tmpFilePath);
       return reply.code(400).send({ error: 'name, version, and a file are required' });
     }
-    munkiRepo.importFile({
-      filePath: tmpFilePath,
-      name: fields.name,
-      displayName: fields.display_name,
-      version: fields.version,
-      category: fields.category,
-      description: fields.description,
-      developer: fields.developer,
-      requires,
-    });
+    try {
+      munkiRepo.importFile({
+        filePath: tmpFilePath,
+        name: fields.name,
+        displayName: fields.display_name,
+        version: fields.version,
+        category: fields.category,
+        description: fields.description,
+        developer: fields.developer,
+        requires,
+      });
+    } catch (err) {
+      req.log.error(err, 'munkiimport failed on uploaded file');
+      fs.unlinkSync(tmpFilePath);
+      return reply.code(400).send({ error: 'invalid package: could not import the uploaded file' });
+    }
     fs.unlinkSync(tmpFilePath);
   }
 
