@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const plist = require('plist');
+const { execFileSync } = require('node:child_process');
 
 function getRepoPath() {
   return process.env.MUNKI_REPO_PATH || path.join(__dirname, '..', 'munki_repo');
@@ -112,6 +113,76 @@ function getPackage(id) {
   return toPackageInfo(fullPath, readManifest());
 }
 
+function sanitize(value) {
+  return String(value).trim().replace(/[^a-zA-Z0-9._-]/g, '-');
+}
+
+function ensureCatalogInManifest(category) {
+  const manifest = readManifest();
+  if (!manifest.catalogs.includes(category)) {
+    manifest.catalogs.push(category);
+    writeManifest(manifest);
+  }
+}
+
+function importFile({ filePath, name, displayName, version, category, description, developer, requires }) {
+  ensureRepoScaffold();
+  const cat = sanitize(category || 'Other');
+  const args = [
+    '--nointeractive',
+    '--repo-url', `file://${getRepoPath()}`,
+    '--subdirectory', cat,
+    '--category', cat,
+    '--name', name,
+    '--displayname', displayName || name,
+    '--description', description || '',
+    '--developer', developer || '',
+    filePath,
+  ];
+  const output = execFileSync(path.join(getMunkiBinDir(), 'munkiimport'), args, { encoding: 'utf8' });
+  const match = output.match(/Saved pkginfo to pkgsinfo\/(.+)\.\s*$/m);
+  if (!match) throw new Error(`munkiimport did not report a saved pkginfo:\n${output}`);
+  const relPathWithExt = match[1];
+  const fullPath = path.join(getPkgsinfoDir(), relPathWithExt);
+
+  if (requires && requires.length) {
+    const data = plist.parse(fs.readFileSync(fullPath, 'utf8'));
+    data.requires = requires;
+    fs.writeFileSync(fullPath, plist.build(data));
+  }
+
+  ensureCatalogInManifest(cat);
+  return idForRelPath(relPathWithExt.replace(/\.plist$/, ''));
+}
+
+function importExternal({ name, displayName, version, category, description, developer, sourceUrl, sha256, sizeBytes, requires }) {
+  ensureRepoScaffold();
+  const cat = sanitize(category || 'Other');
+  const fileBase = `${sanitize(name)}-${sanitize(version)}`;
+  const dir = path.join(getPkgsinfoDir(), cat);
+  fs.mkdirSync(dir, { recursive: true });
+  const fullPath = path.join(dir, `${fileBase}.plist`);
+
+  const data = {
+    name,
+    display_name: displayName || name,
+    version,
+    description: description || '',
+    developer: developer || '',
+    category: cat,
+    catalogs: [cat],
+    installer_item_location: `external/${fileBase}.pkg`,
+    installer_item_hash: String(sha256).toLowerCase(),
+    installer_item_size: Math.ceil(Number(sizeBytes) / 1024),
+    PackageCompleteURL: sourceUrl,
+  };
+  if (requires && requires.length) data.requires = requires;
+
+  fs.writeFileSync(fullPath, plist.build(data));
+  ensureCatalogInManifest(cat);
+  return idForRelPath(`${cat}/${fileBase}`);
+}
+
 module.exports = {
   getRepoPath,
   getMunkiBinDir,
@@ -122,4 +193,6 @@ module.exports = {
   writeManifest,
   listPackages,
   getPackage,
+  importFile,
+  importExternal,
 };
