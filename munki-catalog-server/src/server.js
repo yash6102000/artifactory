@@ -149,12 +149,28 @@ app.post('/admin/packages', async (req, reply) => {
 });
 
 app.post('/admin/packages/:id/approve', async (req, reply) => {
-  munkiRepo.approve(req.params.id);
+  try {
+    munkiRepo.approve(req.params.id);
+  } catch (err) {
+    req.log.error(err, 'approve failed');
+    if (err.message && err.message.startsWith('package not found:')) {
+      return reply.code(404).send({ error: 'package not found' });
+    }
+    return reply.code(500).send({ error: 'failed to update approval state' });
+  }
   return reply.redirect('/admin/packages');
 });
 
 app.post('/admin/packages/:id/revoke', async (req, reply) => {
-  munkiRepo.revoke(req.params.id);
+  try {
+    munkiRepo.revoke(req.params.id);
+  } catch (err) {
+    req.log.error(err, 'revoke failed');
+    if (err.message && err.message.startsWith('package not found:')) {
+      return reply.code(404).send({ error: 'package not found' });
+    }
+    return reply.code(500).send({ error: 'failed to update approval state' });
+  }
   return reply.redirect('/admin/packages');
 });
 

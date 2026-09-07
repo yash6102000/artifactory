@@ -13,6 +13,12 @@ function getMunkiBinDir() {
 
 const MANIFEST_NAME = 'site_default';
 
+// Single fixed catalog for the whole repo (design spec: "single global
+// manifest, single-catalog model"). Both storage modes must agree on this
+// name so the manifest's catalogs array actually contains the catalog each
+// pkginfo claims membership in.
+const CATALOG_NAME = 'production';
+
 function getPkgsinfoDir() {
   return path.join(getRepoPath(), 'pkgsinfo');
 }
@@ -31,13 +37,21 @@ function ensureRepoScaffold() {
     fs.writeFileSync(
       manifestPath,
       plist.build({
-        catalogs: [],
+        catalogs: [CATALOG_NAME],
         included_manifests: [],
         managed_installs: [],
         managed_uninstalls: [],
         optional_installs: [],
       })
     );
+    return;
+  }
+  // Idempotent: make sure an existing manifest (e.g. from before this fix)
+  // also carries the fixed catalog name.
+  const manifest = readManifest();
+  if (!manifest.catalogs.includes(CATALOG_NAME)) {
+    manifest.catalogs.push(CATALOG_NAME);
+    writeManifest(manifest);
   }
 }
 
@@ -106,23 +120,31 @@ function listPackages() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Resolves a decoded relPath to an absolute pkginfo path, but only if it
+// actually stays inside pkgsinfo/ - a crafted id (e.g. base64url of
+// "../../../etc/passwd") could otherwise escape the intended directory.
+// Returns null if the path would escape.
+function resolvePkgsinfoPath(relPath) {
+  const pkgsinfoDir = path.resolve(getPkgsinfoDir());
+  const fullPath = path.resolve(path.join(pkgsinfoDir, `${relPath}.plist`));
+  if (fullPath !== pkgsinfoDir && !fullPath.startsWith(pkgsinfoDir + path.sep)) return null;
+  return fullPath;
+}
+
 function getPackage(id) {
   const relPath = relPathForId(id);
-  const fullPath = path.join(getPkgsinfoDir(), `${relPath}.plist`);
-  if (!fs.existsSync(fullPath)) return null;
+  const fullPath = resolvePkgsinfoPath(relPath);
+  if (!fullPath || !fs.existsSync(fullPath)) return null;
   return toPackageInfo(fullPath, readManifest());
 }
 
 function sanitize(value) {
-  return String(value).trim().replace(/[^a-zA-Z0-9._-]/g, '-');
-}
-
-function ensureCatalogInManifest(category) {
-  const manifest = readManifest();
-  if (!manifest.catalogs.includes(category)) {
-    manifest.catalogs.push(category);
-    writeManifest(manifest);
-  }
+  const cleaned = String(value).trim().replace(/[^a-zA-Z0-9._-]/g, '-');
+  // A bare '.', '..', or empty string would otherwise pass through
+  // unchanged and, used as a directory-name component, could write outside
+  // the intended pkgsinfo/pkgs subdirectory.
+  if (cleaned === '' || cleaned === '.' || cleaned === '..') return 'Other';
+  return cleaned;
 }
 
 function importFile({ filePath, name, displayName, version, category, description, developer, requires }) {
@@ -132,6 +154,7 @@ function importFile({ filePath, name, displayName, version, category, descriptio
     '--nointeractive',
     '--repo-url', `file://${getRepoPath()}`,
     '--subdirectory', cat,
+    '--catalog', CATALOG_NAME,
     '--category', cat,
     '--name', name,
     '--displayname', displayName || name,
@@ -151,7 +174,6 @@ function importFile({ filePath, name, displayName, version, category, descriptio
     fs.writeFileSync(fullPath, plist.build(data));
   }
 
-  ensureCatalogInManifest(cat);
   return idForRelPath(relPathWithExt.replace(/\.plist$/, ''));
 }
 
@@ -170,7 +192,7 @@ function importExternal({ name, displayName, version, category, description, dev
     description: description || '',
     developer: developer || '',
     category: cat,
-    catalogs: [cat],
+    catalogs: [CATALOG_NAME],
     installer_item_location: `external/${fileBase}.pkg`,
     installer_item_hash: String(sha256).toLowerCase(),
     installer_item_size: Math.ceil(Number(sizeBytes) / 1024),
@@ -179,7 +201,6 @@ function importExternal({ name, displayName, version, category, description, dev
   if (requires && requires.length) data.requires = requires;
 
   fs.writeFileSync(fullPath, plist.build(data));
-  ensureCatalogInManifest(cat);
   return idForRelPath(`${cat}/${fileBase}`);
 }
 

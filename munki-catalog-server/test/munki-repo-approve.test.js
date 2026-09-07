@@ -42,11 +42,18 @@ test('approve adds the package name to optional_installs and rebuilds catalogs',
 
   const manifest = munkiRepo.readManifest();
   assert.ok(manifest.optional_installs.includes('MunkiPlanApproveApp'));
-  const catalogPath = path.join(munkiRepo.getRepoPath(), 'catalogs', 'testing');
-  assert.ok(fs.existsSync(catalogPath), 'makecatalogs should have written catalogs/testing');
+  const catalogPath = path.join(munkiRepo.getRepoPath(), 'catalogs', 'production');
+  assert.ok(fs.existsSync(catalogPath), 'makecatalogs should have written catalogs/production');
 
   const pkg = munkiRepo.getPackage(id);
   assert.equal(pkg.approved, true);
+});
+
+test('unknown id raises "package not found" (approve/revoke error format used by server.js)', () => {
+  const munkiRepo = freshRepoEnv();
+  munkiRepo.ensureRepoScaffold();
+  assert.throws(() => munkiRepo.approve('bogus-id'), /package not found: bogus-id/);
+  assert.throws(() => munkiRepo.revoke('bogus-id'), /package not found: bogus-id/);
 });
 
 test('revoke removes the package name from optional_installs', () => {

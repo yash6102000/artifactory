@@ -1,10 +1,12 @@
 const path = require('node:path');
+const fs = require('node:fs');
 const Database = require('better-sqlite3');
 
 // Separate SQLite file from catalog-server's - no shared writes with the
 // old system during the parallel-build/testing period (design spec,
 // "Data separation during the trial").
 const dbPath = path.join(__dirname, '..', 'data', 'catalog.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 

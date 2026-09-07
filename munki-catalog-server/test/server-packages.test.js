@@ -90,3 +90,40 @@ test('POST /admin/packages (file mode, malformed .pkg) returns a clean 400 and c
 
   await app.close();
 });
+
+test('POST /admin/packages/:id/approve with an unknown id returns a clean 404, not a leaked 500', async () => {
+  process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-server-test-'));
+  process.env.PORT = '0';
+  delete require.cache[require.resolve('../src/db')];
+  delete require.cache[require.resolve('../src/munki-repo')];
+  delete require.cache[require.resolve('../src/server')];
+  const app = require('../src/server');
+  await app.ready();
+
+  const res = await app.inject({ method: 'POST', url: '/admin/packages/some-bogus-id/approve' });
+
+  assert.equal(res.statusCode, 404);
+  const body = JSON.parse(res.body);
+  assert.equal(body.error, 'package not found');
+  assert.ok(!/package not found: some-bogus-id|Error:|at Object|\.js:\d+/i.test(res.body));
+
+  await app.close();
+});
+
+test('POST /admin/packages/:id/revoke with an unknown id returns a clean 404, not a leaked 500', async () => {
+  process.env.MUNKI_REPO_PATH = fs.mkdtempSync(path.join(os.tmpdir(), 'munki-repo-server-test-'));
+  process.env.PORT = '0';
+  delete require.cache[require.resolve('../src/db')];
+  delete require.cache[require.resolve('../src/munki-repo')];
+  delete require.cache[require.resolve('../src/server')];
+  const app = require('../src/server');
+  await app.ready();
+
+  const res = await app.inject({ method: 'POST', url: '/admin/packages/some-bogus-id/revoke' });
+
+  assert.equal(res.statusCode, 404);
+  const body = JSON.parse(res.body);
+  assert.equal(body.error, 'package not found');
+
+  await app.close();
+});
