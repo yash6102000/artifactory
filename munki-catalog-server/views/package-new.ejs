@@ -1,0 +1,67 @@
+<%- include('_layout_top') %>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:15px;">Add a package</h3>
+  <p style="font-size:12px;color:#6b7280;">Store the actual installer, or point at where the vendor already hosts it (metadata-only — no file kept on this server). It lands as <strong>Pending</strong> until explicitly approved.</p>
+
+  <form class="upload" method="post" action="/admin/packages" enctype="multipart/form-data" onsubmit="return true;">
+    <div class="mode-toggle">
+      <label><input type="radio" name="mode" value="file" checked onclick="toggleMode('file')"> Upload file</label>
+      <label><input type="radio" name="mode" value="external" onclick="toggleMode('external')"> External URL</label>
+    </div>
+
+    <label>App name</label>
+    <input type="text" name="name" placeholder="Docker Desktop" required>
+
+    <label>Display name</label>
+    <input type="text" name="display_name" placeholder="Docker Desktop">
+
+    <label>Version</label>
+    <input type="text" name="version" placeholder="4.34.0" required>
+
+    <label>Category</label>
+    <input type="text" name="category" placeholder="Developer Tools">
+
+    <label>Developer</label>
+    <input type="text" name="developer" placeholder="Docker Inc">
+
+    <label>Description</label>
+    <textarea name="description" rows="2" placeholder="What it's for, in one line"></textarea>
+
+    <label>Requires (comma-separated package names, optional — e.g. a shared library this app needs first)</label>
+    <input type="text" name="requires" placeholder="SomeSharedLibrary">
+
+    <div id="file-fields">
+      <label>Installer file (.pkg / .dmg)</label>
+      <input type="file" name="file">
+    </div>
+
+    <div id="external-fields" style="display:none;">
+      <label>Source URL</label>
+      <input type="text" name="source_url" placeholder="https://vendor.example.com/App-1.0.pkg">
+
+      <label>SHA-256 (64 hex characters)</label>
+      <input type="text" name="sha256" placeholder="64-character hex hash" pattern="[0-9a-fA-F]{64}">
+
+      <label>File size (bytes)</label>
+      <input type="text" name="size_bytes" placeholder="52428800">
+    </div>
+
+    <div style="margin-top:16px;">
+      <button class="btn primary" type="submit">Add package</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleMode(mode) {
+  document.getElementById('file-fields').style.display = mode === 'file' ? 'block' : 'none';
+  document.getElementById('external-fields').style.display = mode === 'external' ? 'block' : 'none';
+  document.querySelector('input[name="file"]').required = mode === 'file';
+  document.querySelector('input[name="source_url"]').required = mode === 'external';
+  document.querySelector('input[name="sha256"]').required = mode === 'external';
+  document.querySelector('input[name="size_bytes"]').required = mode === 'external';
+}
+</script>
+
+<%- include('_layout_bottom') %>
