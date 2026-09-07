@@ -28,6 +28,27 @@ app.register(multipart, {
 });
 app.register(require('./santa-sync'));
 
+app.post('/api/devices/checkin', async (req, reply) => {
+  const { device_uuid, hostname } = req.body || {};
+  if (!device_uuid) return reply.code(400).send({ error: 'device_uuid required' });
+  db.prepare(
+    `INSERT INTO devices (device_uuid, hostname) VALUES (?, ?)
+     ON CONFLICT(device_uuid) DO UPDATE SET hostname = excluded.hostname, last_seen = datetime('now')`
+  ).run(device_uuid, hostname || '');
+  reply.send({ ok: true });
+});
+
+app.post('/api/install-events', async (req, reply) => {
+  const { device_uuid, package_name, status } = req.body || {};
+  if (!device_uuid || !package_name || !status) {
+    return reply.code(400).send({ error: 'device_uuid, package_name, status required' });
+  }
+  db.prepare(
+    `INSERT INTO install_events (device_uuid, package_name, status) VALUES (?, ?, ?)`
+  ).run(device_uuid, package_name, status);
+  reply.send({ ok: true });
+});
+
 if (process.env.FORCE_HTTPS === '1') {
   app.addHook('onRequest', async (req, reply) => {
     if (req.headers['x-forwarded-proto'] === 'https') return;

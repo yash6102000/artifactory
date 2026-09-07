@@ -1,0 +1,44 @@
+#!/bin/bash
+# Munki postflight script — reports device check-in and install results
+# back to munki-catalog-server's admin dashboard (design spec, "Device
+# and install-event tracking"). Munki runs any executable file it finds
+# at /usr/local/munki/postflight after every managedsoftwareupdate run.
+#
+# Install:
+#   sudo cp scripts/postflight /usr/local/munki/postflight
+#   sudo chmod +x /usr/local/munki/postflight
+set -uo pipefail
+
+CATALOG_SERVER_URL="${CATALOG_SERVER_URL:-http://127.0.0.1:3100}"
+DEVICE_UUID=$(/usr/sbin/ioreg -d2 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}')
+HOSTNAME=$(/usr/sbin/scutil --get ComputerName 2>/dev/null || hostname)
+REPORT="/Library/Managed Installs/ManagedInstallReport.plist"
+
+curl -s -X POST "$CATALOG_SERVER_URL/api/devices/checkin" \
+  -H "Content-Type: application/json" \
+  -d "{\"device_uuid\":\"$DEVICE_UUID\",\"hostname\":\"$HOSTNAME\"}" >/dev/null 2>&1 || true
+
+if [ -f "$REPORT" ]; then
+  /usr/bin/plutil -convert json -o - "$REPORT" 2>/dev/null | /usr/bin/python3 -c '
+import json, sys, subprocess
+
+data = json.load(sys.stdin)
+device_uuid = "'"$DEVICE_UUID"'"
+url = "'"$CATALOG_SERVER_URL"'" + "/api/install-events"
+
+def report(name, status):
+    subprocess.run(
+        ["curl", "-s", "-X", "POST", url,
+         "-H", "Content-Type: application/json",
+         "-d", json.dumps({"device_uuid": device_uuid, "package_name": name, "status": status})],
+        check=False,
+    )
+
+for name in data.get("InstalledItems", []):
+    report(name, "installed")
+for name in data.get("ItemsToRemove", []):
+    report(name, "removed")
+' || true
+fi
+
+exit 0
