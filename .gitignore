@@ -7,3 +7,4 @@ client-mac/.build/
 client-mac/build/
 client-mac/.swiftpm/
 .DS_Store
+.worktrees/
