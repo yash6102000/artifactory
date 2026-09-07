@@ -183,6 +183,30 @@ function importExternal({ name, displayName, version, category, description, dev
   return idForRelPath(`${cat}/${fileBase}`);
 }
 
+function runMakeCatalogs() {
+  execFileSync(path.join(getMunkiBinDir(), 'makecatalogs'), [getRepoPath()], { stdio: 'pipe' });
+}
+
+function approve(id) {
+  const pkg = getPackage(id);
+  if (!pkg) throw new Error(`package not found: ${id}`);
+  const manifest = readManifest();
+  if (!manifest.optional_installs.includes(pkg.name)) {
+    manifest.optional_installs.push(pkg.name);
+    writeManifest(manifest);
+  }
+  runMakeCatalogs();
+}
+
+function revoke(id) {
+  const pkg = getPackage(id);
+  if (!pkg) throw new Error(`package not found: ${id}`);
+  const manifest = readManifest();
+  manifest.optional_installs = manifest.optional_installs.filter((n) => n !== pkg.name);
+  writeManifest(manifest);
+  runMakeCatalogs();
+}
+
 module.exports = {
   getRepoPath,
   getMunkiBinDir,
@@ -195,4 +219,6 @@ module.exports = {
   getPackage,
   importFile,
   importExternal,
+  approve,
+  revoke,
 };
