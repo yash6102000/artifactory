@@ -6,6 +6,7 @@ const Fastify = require('fastify');
 const view = require('@fastify/view');
 const multipart = require('@fastify/multipart');
 const formbody = require('@fastify/formbody');
+const compress = require('@fastify/compress');
 const ejs = require('ejs');
 const db = require('./db');
 const munkiRepo = require('./munki-repo');
@@ -26,6 +27,15 @@ app.register(formbody);
 app.register(multipart, {
   limits: { fileSize: 2 * 1024 * 1024 * 1024 },
 });
+// Santa's sync client gzip-compresses its request bodies. Without this,
+// a compressed request body's actual byte count never matches the
+// Content-Length header Fastify expects, and every sync call from a real
+// Santa client fails with FST_ERR_CTP_INVALID_CONTENT_LENGTH before it
+// ever reaches santa-sync.js's route handlers. Request decompression and
+// response compression share one "global" flag in this plugin — leaving
+// it at its default (true) is what turns decompression on; only
+// requests that actually send a Content-Encoding header are touched.
+app.register(compress);
 app.register(require('./santa-sync'));
 
 app.post('/api/devices/checkin', async (req, reply) => {

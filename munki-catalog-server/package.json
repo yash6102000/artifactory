@@ -12,6 +12,7 @@
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "@fastify/compress": "^6.5.0",
     "@fastify/formbody": "^7.4.0",
     "@fastify/multipart": "^8.3.0",
     "@fastify/view": "^9.1.0",
